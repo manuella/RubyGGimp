@@ -51,6 +51,10 @@ end
 #      3. Make drawing groups
 #      4. Documentation
 
+#Big question for SamR
+#       -Are guard procs sub classes of Test::Unit::TestCase, or their
+#       own classes?
+
 
 class Drawings
   def render()
@@ -87,10 +91,13 @@ end
 #Guard procedures
  
 class Guard < Test::Unit::TestCase
-  def test_image_exists(image)
+  def test_image_exists
+    if !@imageID
+      assert(nil, "ImageID is not valid")
+    end
     assert($gimp_iface.gimp_image_is_valid(@imageID), "ImageID is not valid")
   end
-  def test_is_unit_circle(circle)
-    assert((circle.instance_of?(Unitcircle)), "This is not a unit circle")
+  def test_is_unit_circle
+    assert((Unitcircle.instance_of?(Unitcircle)), "This is not a unit circle")
   end
 end
