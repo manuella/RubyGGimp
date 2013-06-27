@@ -1,0 +1,4 @@
+RubyGGimp
+=========
+
+Ruby &amp; GGimp
