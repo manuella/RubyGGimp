@@ -59,8 +59,7 @@ end
 class Drawings
   def render()
   end
- # def size()
- #   if instance_of?(Unitcircle)
+
 end
 class Unitcircle < Drawings
   @radius = 0
@@ -87,6 +86,18 @@ class Unitsquare < Drawings
   end
 end
 
+
+# RGB support
+class RGB
+  @rgb = 
+  def initialize(r, g, b) #This should check whether or not these are all integers
+    rtemp = r << 16
+    gtemp = g << 8
+    btemp = b 
+    @rgb = r & g & b
+  end
+end
+    
     
 #Guard procedures
  
