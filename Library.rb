@@ -85,8 +85,17 @@ class Unitsquare < Drawings
   end
 end
 
+# ^^^ Untested ^^^ #
+#------------------#
+# vvv  Tested  vvv #
 
 # RGB support
+
+#Todo:
+#      -Bind @r/@g@/b between 0 and 255
+#      -Add support for additional rgb functions that are in pdb
+
+
 class Rgb
   @r
   @g
@@ -102,27 +111,44 @@ class Rgb
     return @r
   end
 
+  def set_r(r)
+    @r = r
+  end
+   
   def get_g
     return @g
+  end
+  
+  def set_g(g)
+    @g = g
   end
 
   def get_b
     return @b
   end
 
+  def set_b(b)
+    @b = b
+  end
+
   def compress_rgb()
     @rgb = ((@r << 16) | (@g << 8) | @b)
     return
   end 
+
   def extract_rgb()
     rOut = ((@rgb << 8) >> 24)
     gOut = ((@rgb << 16) >> 24)
     bOut = (@rgb - rOut) - gOut
     return [rOut, gOut, bOut]
   end
+
 end
     
- 
+# ^^^  Tested  ^^^ #
+#------------------#
+# vvv Untested vvv #
+
 #Guard procedures
 
 # We're building an unsafe wrapper for now, we can implement this later
