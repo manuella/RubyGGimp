@@ -151,8 +151,11 @@ class Rgb
     return @rgb
   end
 
-  def set_rgb_compressed(rgb) 
+  def set_rgb_compressed(rgb)
     @rgb = rgb
+    @r = ((rgb << 8) >> 24)
+    @g = ((rgb << 16) >> 24)
+    @b = (rgb - @r) - @g
   end
 
   def get_r
@@ -161,6 +164,7 @@ class Rgb
 
   def set_r(r)
     @r = r
+    @rgb = (((@rgb << 16) >> 16) + (r << 16))
   end
    
   def get_g
@@ -169,6 +173,7 @@ class Rgb
   
   def set_g(g)
     @g = g
+    @rgb = (((@rgb << 8) >> 8) + (g << 8))
   end
 
   def get_b
@@ -177,17 +182,14 @@ class Rgb
 
   def set_b(b)
     @b = b
+    @rgb = (((@rgb >> 8) << 8) + b)
   end
 
-  def compress()
-    @rgb = ((@r << 16) | (@g << 8) | @b)
-    return
-  end 
-
   def extract()
-    rOut = ((@rgb << 8) >> 24)
-    gOut = ((@rgb << 16) >> 24)
-    bOut = (@rgb - rOut) - gOut
+    rgbTemp = @rgb
+    rOut = ((rgbTemp << 8) >> 24)
+    gOut = ((rgbTemp << 16) >> 24)
+    bOut = (rgbTemp - rOut) - gOut
     return [rOut, gOut, bOut]
   end
 
