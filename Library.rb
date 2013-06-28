@@ -44,16 +44,52 @@ end
 #------------------#
 # vvv Untested vvv #
 
+#Context
+
+class Context
+  @bg
+  @fg
+  @brush
+  def initialize()
+    @bg = $gimp_iface.gimp_context_get_background()
+    @fg = $gimp_iface.gimp_context_get_foreground()
+    @brush =$gimp_iface. gimp_context_get_brush()
+  end
+  def set_bg(rgb)
+    @bg = rgb
+   $gimp_iface. gimp_context_set_background(rgb)
+  end
+  def get_bg()
+    @bg = $gimp_iface.gimp_context_get_background()
+    return @bg
+  end
+  def set_fg(rgb)
+    @fg = rgb
+   $gimp_iface. gimp_context_set_foreground(rgb)
+  end
+  def get_fg
+    @fg = $gimp_iface.gimp_context_get_foreground()
+    return @fg
+  end
+  def set_brush(brush)
+    @brush = brush
+    $gimp_iface.gimp_context_set_brush(brush)
+  end
+  def get_brush()
+    @brush = $gimp_iface.gimp_context_get_brush()
+    return @brush
+  end
+end
+
+
+
 #Drawings
 
 #Todo: 1. Make Drawings.render
 #      2. Make guard procs for Drawings and its subclasses
 #      3. Make drawing groups
 #      4. Documentation
-
-#Big question for SamR
-#       -Are guard procs sub classes of Test::Unit::TestCase, or their
-#       own classes?
+#      5. Create render method
 
 
 class Drawings
@@ -91,6 +127,9 @@ end
 
 # RGB support
 
+#Figure out because I'm still learning ruby:
+#      -How do I refer to a given instance within a method that I am defining?
+
 #Todo:
 #      -Bind @r/@g@/b between 0 and 255
 #      -Add support for additional rgb functions that are in pdb
@@ -105,6 +144,15 @@ class Rgb
     @r = r
     @g = g
     @b = b
+    @rgb = ((@r << 16) | (@g << 8) | @b)
+  end
+  
+  def get_rgb
+    return @rgb
+  end
+
+  def set_rgb_compressed(rgb) 
+    @rgb = rgb
   end
 
   def get_r
@@ -131,12 +179,12 @@ class Rgb
     @b = b
   end
 
-  def compress_rgb()
+  def compress()
     @rgb = ((@r << 16) | (@g << 8) | @b)
     return
   end 
 
-  def extract_rgb()
+  def extract()
     rOut = ((@rgb << 8) >> 24)
     gOut = ((@rgb << 16) >> 24)
     bOut = (@rgb - rOut) - gOut
