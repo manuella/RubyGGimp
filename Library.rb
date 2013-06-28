@@ -4,7 +4,7 @@
 #!/ruby/bin/env ruby
 
 require 'dbus'
-require "test/unit"
+#require "test/unit"
 
 
 $bus = DBus::SessionBus.instance
@@ -57,8 +57,7 @@ end
 
 
 class Drawings
-  def render()
-  end
+  #Add render
 
 end
 class Unitcircle < Drawings
@@ -88,27 +87,54 @@ end
 
 
 # RGB support
-class RGB
-  @rgb = 
+class Rgb
+  @r
+  @g
+  @b
+  @rgb
   def initialize(r, g, b) #This should check whether or not these are all integers
-    rtemp = r << 16
-    gtemp = g << 8
-    btemp = b 
-    @rgb = r & g & b
+    @r = r
+    @g = g
+    @b = b
+  end
+
+  def get_r
+    return @r
+  end
+
+  def get_g
+    return @g
+  end
+
+  def get_b
+    return @b
+  end
+
+  def compress_rgb()
+    @rgb = ((@r << 16) | (@g << 8) | @b)
+    return
+  end 
+  def extract_rgb()
+    rOut = ((@rgb << 8) >> 24)
+    gOut = ((@rgb << 16) >> 24)
+    bOut = (@rgb - rOut) - gOut
+    return [rOut, gOut, bOut]
   end
 end
     
-    
-#Guard procedures
  
-class Guard < Test::Unit::TestCase
-  def test_image_exists
-    if !@imageID
-      assert(nil, "ImageID is not valid")
-    end
-    assert($gimp_iface.gimp_image_is_valid(@imageID), "ImageID is not valid")
-  end
-  def test_is_unit_circle
-    assert((Unitcircle.instance_of?(Unitcircle)), "This is not a unit circle")
-  end
-end
+#Guard procedures
+
+# We're building an unsafe wrapper for now, we can implement this later
+ 
+#class Guard < Test::Unit::TestCase
+#  def test_image_exists
+#    if !@imageID
+#      assert(nil, "ImageID is not valid")
+#    end
+#    assert($gimp_iface.gimp_image_is_valid(@imageID), "ImageID is not valid")
+#  end
+#  def test_is_unit_circle
+#    assert((Unitcircle.instance_of?(Unitcircle)), "This is not a unit circle")
+#  end
+#end
