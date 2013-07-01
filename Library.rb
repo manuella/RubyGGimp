@@ -254,6 +254,13 @@ class Rgb
   end
 
 end
+
+def i_to_Rgb(int_color)
+  i_r = (int_color << 8) >> 24
+  i_g = (int_color << 16) >> 24
+  i_b = (int_color << 24) >> 24
+  return Rgb.new(i_r, i_g, i_b)
+end
     
 # ^^^  Tested  ^^^ #
 #------------------#
