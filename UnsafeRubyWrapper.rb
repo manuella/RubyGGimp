@@ -38,13 +38,7 @@ def context_display_flush()
 end
 
 def context_set_bgcolor(rgb)
-  if rgb.instance_of? Integer
     $gimp_iface.gimp_context_set_background(rgb)
-  elsif rgb.instance_of? Rgb
-    $gimp_iface.gimp_context_set_background(rgb.get_rgb)
-  else
-    #what are you giving us? Have an error!
-  end
 end
 
 def context_set_fgcolor(rgb)
@@ -65,6 +59,10 @@ end
 
 def context_set_brush(brush_name)
   $gimp_iface.gimp_context_set_brush(brush_name)
+end
+
+def flush_displays()
+  $gimp_iface.gimp_displays_flush()
 end
 
 class Flag
@@ -144,8 +142,7 @@ class Image
                                                100, 0)[0]
 
     $gimp_iface.gimp_image_insert_layer(@imageID, @active_layer, 0, 0)
-    $gimp_iface.gimp_edit_bucket_fill(@active_layer, 1, 
-                                      0, 100, 255, 0, 0, 0)
+    $gimp_iface.gimp_drawable_fill(@active_layer, 1)
 
   end
 
@@ -244,8 +241,8 @@ class Rgb
     gOut = ((rgbTemp << 16) >> 24)
     bOut = (rgbTemp - rOut) - gOut
     return [rOut, gOut, bOut]
- end
-
+  end
+  
   def get_b
     return @b
   end 
@@ -271,7 +268,7 @@ class Rgb
     @g = g
     @rgb = (((@rgb << 8) >> 8) + (g << 8)) #see set_rgb
   end
-
+  
   def set_r(r)
     @r = r
     @rgb = (((@rgb << 16) >> 16) + (r << 16)) #see set_rgb
@@ -370,7 +367,7 @@ class Turtle
    
     newcol = @col + (dist * Math.cos(d2r))
     newrow = @row + (dist * Math.sin(d2r))
-
+    
     color_tmp = context_get_fgcolor()
     brush_tmp = context_get_brush()
     change_color = false
