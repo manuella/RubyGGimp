@@ -3,11 +3,14 @@
 
 #The start of a ruby wrapper library for ggimp
 
+
+#***************************************************************
+#--- Set up the Ruby/Dbus environment, then aquire the proxy  --
+#***************************************************************
+
 #!/ruby/bin/env ruby
 
 require 'dbus'
-#require "test/unit"
-
 
 $bus = DBus::SessionBus.instance
 $gimp_service = $bus.service("edu.grinnell.cs.glimmer.GimpDBus")
@@ -15,6 +18,10 @@ $gimp_object = $gimp_service.object("/edu/grinnell/cs/glimmer/gimp")
 $gimp_object.introspect
 $gimp_iface = $gimp_object["edu.grinnell.cs.glimmer.pdb"]
 
+$ADD = 0
+$SUBTRACT = 1
+$REPLACE = 2
+$INTERSECT = 3
 
 #Done: 
 #      -Images
@@ -160,6 +167,10 @@ class Image
 
   def set_active_layer(layer) #will need guard procedures
     @active_layer = layer
+  end
+
+  def get_ID
+    return @imageID
   end
 end
 
@@ -387,3 +398,26 @@ class Turtle
 end
 
 
+#***************************************************************
+#----------           Image Selections          ----------------
+#***************************************************************
+
+def image_select_rectangle(image, operation, x, y, width, height)
+  $gimp_iface.gimp_image_select_rectangle(image.get_ID(), operation, x, y, width, height)
+end
+
+def image_select_ellipse(image, operation, x, y, width, height)
+  $gimp_iface.gimp_image_select_ellipse(image.get_ID(), operation, x, y, width, height)
+end
+
+def image_stroke_selection(image)
+  $gimp_iface.gimp_edit_stroke(image.get_layer())
+end
+
+def image_fill_selection(image)
+  $gimp_iface.gimp_edit_fill(image.get_layer(), 0)
+end
+
+def image_select_none(image)
+  $gimp_iface.gimp_selection_none(image.get_ID)
+end
