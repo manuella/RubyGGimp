@@ -80,6 +80,19 @@ end
 
 $context_preserve = Flag.new()
 
+
+#to keep numbers within a range, esp. for rgb functions
+def clamp(num, lbound, ubound)
+  if num < lbound
+    num = lbound
+  end
+  if num > ubound
+    num = ubound
+  end
+  return num
+end
+     
+
 #This context class is unused. We do not think modeling context
 #like this makes sense, but if we're told other wise, we'll move
 #back to this vvv code.
@@ -287,6 +300,23 @@ class Rgb
     i_b = (int_color << 24) >> 24
     return Rgb.new(i_r, i_g, i_b)
   end
+  #rgb-lighter, rgb-darker    are untested
+  def lighter()
+    @r += 16
+    @g += 16
+    @b += 16
+    @rgb = ((@r << 16) | (@g << 8) | @b)
+  end
+    
+  def darker
+    @r -= 16
+    @g -= 16
+    @b -= 16
+    @rgb = ((@r << 16) | (@g << 8) | @b)
+  end
+
+def redder
+  @r
 end
 
 #***************************************************************
@@ -418,3 +448,20 @@ end
 def image_select_none(image)
   $gimp_iface.gimp_selection_none(image.get_ID)
 end
+
+#***************************************************************
+#----------           Image Load                ----------------
+#***************************************************************
+
+
+class Loaded_image < Image
+  def initialize(path)
+    @imageID = $gimp_iface.gimp_file_load(0, path, path)[0]
+    @width = $gimp_iface.gimp_image_width(@imageID)
+    @height = $gimp_iface.gimp_image_height(@imageID)
+    @active_layer = $gimp_iface.gimp_image_get_active_layer(@imageID)
+  end
+end
+
+
+
