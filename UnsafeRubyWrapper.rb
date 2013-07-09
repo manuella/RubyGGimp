@@ -65,7 +65,7 @@ def context_display_flush()
 end
 
 def context_set_bgcolor(rgb)
-    $gimp_iface.gimp_context_set_background(rgb)
+  $gimp_iface.gimp_context_set_background(rgb)
 end
 
 def context_set_fgcolor(rgb)
@@ -296,65 +296,38 @@ class Rgb
   @g
   @b
   @rgb
+
   def initialize(r, g, b)
-    @r = r
-    @g = g
-    @b = b
+    @r = rgb_clamp(r)
+    @g = rgb_clamp(g)
+    @b = rgb_clamp(b)
     @rgb = ((@r << 16) | (@g << 8) | @b)
   end
   
-  def extract()
-    rgbTemp = @rgb
-    rOut = ((rgbTemp << 8) >> 24)
-    gOut = ((rgbTemp << 16) >> 24)
-    bOut = (rgbTemp - rOut) - gOut
-    return [rOut, gOut, bOut]
-  end
-  
-  def get_b
-    return @b
-  end 
+  attr_reader :r, :g, :b, :rgb
 
-  def get_g
-    return @g
-  end
-
-  def get_r
-    return @r
-  end 
-
-  def get_rgb
-    return @rgb
-  end
-
-  def set_b(b)
+  def b=(b)
     @b = b
     @rgb = (((@rgb >> 8) << 8) + b) #See set_rgb
   end
 
-  def set_g(g)
+  def g=(g)
     @g = g
     @rgb = (((@rgb << 8) >> 8) + (g << 8)) #see set_rgb
   end
   
-  def set_r(r)
+  def r=(r)
     @r = r
     @rgb = (((@rgb << 16) >> 16) + (r << 16)) #see set_rgb
   end
    
-  def set_rgb(rgb)
+  def rgb=(rgb)
     @rgb = rgb
     @r = ((rgb << 8) >> 24) #Shift left to remove digits to the left
     @g = ((rgb << 16) >> 24) #Shift right to remove digits to the right
     @b = (rgb - @r) - @g    #All that remains is the relevent digits
   end
-  
-  def i_to_rgb(int_color) #Converts an Rgb int into an actual rgb
-    i_r = (int_color << 8) >> 24
-    i_g = (int_color << 16) >> 24
-    i_b = (int_color << 24) >> 24
-    return Rgb.new(i_r, i_g, i_b)
-  end
+
   #The following rgb methods are untested
   def lighter()
     @r = rgb_clamp(@r + 16)
