@@ -5,6 +5,33 @@
 
 
 #***************************************************************
+ # Things we learned from feedback
+ # Technique:
+ #    -Use "setters"
+ #    -Classes should always be internally consistant
+ #        -e.x: inputing rgb components should set the
+ #         fields for the int. rgb rep and HSV representations
+ #         as well
+ #    -Images should use multiple constructors
+ #        -Loaded image should not be a sub-class of Image
+ #    -Camel Case for classes
+#***************************************************************
+
+#***************************************************************
+ # Things we learned from book
+ # Technique:
+ #    -Use attr_reader
+ #    -class.attribute = value would be creates as def attribute=(value)
+ #        -or with attr_writer :attribute
+ #    -Use Virtual attributes for Color
+ #    -Make sure that methods which will break internal state are not
+ #     available to the user. (page 38 of Programming Ruby)
+ #        -These should be set as protected methods 
+ #            -Setting a component without revising internal state
+ #        
+#***************************************************************
+
+#***************************************************************
 #--- Set up the Ruby/Dbus environment, then aquire the proxy  --
 #***************************************************************
 
@@ -90,6 +117,10 @@ def clamp(num, lbound, ubound)
     num = ubound
   end
   return num
+end
+
+def rgb_clamp(num)
+  return clamp(num, 0, 255)
 end
      
 
@@ -182,6 +213,30 @@ class Image
   def get_ID
     return @imageID
   end
+
+  def fill_selection
+    $gimp_iface.gimp_edit_fill(@active_layer, 0)
+  end
+
+  def stroke_selection
+     $gimp_iface.gimp_edit_stroke(@active_layer)
+  end
+
+  def select_rectangle(operation, x, y, width, height)
+    $gimp_iface.gimp_image_select_rectangle(@imageID, operation, 
+                                            x, y, width, height)
+  end
+
+  def select_ellipse(operation, x, y, width, height)
+    $gimp_iface.gimp_image_select_ellipse(@imageID, operation, 
+                                          x, y, width, height)
+  end
+
+def select_none
+  $gimp_iface.gimp_selection_none(@imageID)
+end
+
+  
 end
 
 
@@ -300,25 +355,36 @@ class Rgb
     i_b = (int_color << 24) >> 24
     return Rgb.new(i_r, i_g, i_b)
   end
-  #rgb-lighter, rgb-darker    are untested
+  #The following rgb methods are untested
   def lighter()
-    @r += 16
-    @g += 16
-    @b += 16
+    @r = rgb_clamp(@r + 16)
+    @g = rgb_clamp(@g + 16)
+    @b = rgb_clamp(@b + 16)
     @rgb = ((@r << 16) | (@g << 8) | @b)
   end
     
   def darker
-    @r -= 16
-    @g -= 16
-    @b -= 16
+    @r = rgb_clamp(@r - 16)
+    @g = rgb_clamp(@g - 16)
+    @b = rgb_clamp(@b - 16)
     @rgb = ((@r << 16) | (@g << 8) | @b)
   end
 
-def redder
-  @r
+  def redder
+    @r = rgb_clamp(@r + 32)
+    @rgb = ((@r << 16) | (@g << 8) | @b)
+  end
+  
+  def greener
+    @g = rgb_clamp(@g + 32)
+    @rgb = ((@r << 16) | (@g << 8) | @b)
+  end
+  
+  def bluer #ew
+    @b = rgb_clamp(@b + 32)
+    @rgb = ((@r << 16) | (@g << 8) | @b)
+  end  
 end
-
 #***************************************************************
 #----------             Turtle Class            ----------------
 #***************************************************************
@@ -429,32 +495,13 @@ end
 #----------           Image Selections          ----------------
 #***************************************************************
 
-def image_select_rectangle(image, operation, x, y, width, height)
-  $gimp_iface.gimp_image_select_rectangle(image.get_ID(), operation, x, y, width, height)
-end
-
-def image_select_ellipse(image, operation, x, y, width, height)
-  $gimp_iface.gimp_image_select_ellipse(image.get_ID(), operation, x, y, width, height)
-end
-
-def image_stroke_selection(image)
-  $gimp_iface.gimp_edit_stroke(image.get_layer())
-end
-
-def image_fill_selection(image)
-  $gimp_iface.gimp_edit_fill(image.get_layer(), 0)
-end
-
-def image_select_none(image)
-  $gimp_iface.gimp_selection_none(image.get_ID)
-end
 
 #***************************************************************
 #----------           Image Load                ----------------
 #***************************************************************
 
 
-class Loaded_image < Image
+class LoadedImage < Image
   def initialize(path)
     @imageID = $gimp_iface.gimp_file_load(0, path, path)[0]
     @width = $gimp_iface.gimp_image_width(@imageID)
@@ -462,6 +509,3 @@ class Loaded_image < Image
     @active_layer = $gimp_iface.gimp_image_get_active_layer(@imageID)
   end
 end
-
-
-
