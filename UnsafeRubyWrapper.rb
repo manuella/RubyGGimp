@@ -171,47 +171,28 @@ end
 #***************************************************************
 
 class Image
-
+  
   @width
   @height
   @imageID
   @active_layer
+  
 
-  def initialize(width, height)
-    @width = width
-    @height = height
-    @imageID = $gimp_iface.gimp_image_new(width, height, 0)[0]
-    @active_layer = $gimp_iface.gimp_layer_new(@imageID, width,
-                                               height, 0, "Background",
-                                               100, 0)[0]
+  attr_reader :width, :height, :imageID, :active_layer
 
-    $gimp_iface.gimp_image_insert_layer(@imageID, @active_layer, 0, 0)
-    $gimp_iface.gimp_drawable_fill(@active_layer, 1)
-
-  end
 
   def show
     $gimp_iface.gimp_display_new(@imageID)
   end
-
-  def get_width
-    return @width
-  end
-
-  def get_height
-    return @height
-  end
-
-  def get_layer
-    return @active_layer
-  end
-
-  def set_active_layer(layer) #will need guard procedures
-    @active_layer = layer
-  end
-
-  def get_ID
-    return @imageID
+  
+  def set_active_layer(layerID)
+    layerList = $gimp_iface.gimp_image_get_layers(@imageID)[1]
+    if layerList.include? layerID
+      @active_layer = layerID
+    else
+      puts "Invalid layer ID for this image: #{@imageID}"
+    end
+    
   end
 
   def fill_selection
@@ -232,10 +213,41 @@ class Image
                                           x, y, width, height)
   end
 
-def select_none
-  $gimp_iface.gimp_selection_none(@imageID)
-end
+  def select_none
+    $gimp_iface.gimp_selection_none(@imageID)
+  end
+  
 
+
+  private
+  
+  def Image.new_blank(width, height) 
+    imageID = $gimp_iface.gimp_image_new(width, height, 0)[0]
+    active_layer = $gimp_iface.gimp_layer_new(imageID, width,
+                                              height, 0, "Background",
+                                              100, 0)[0]
+    $gimp_iface.gimp_image_insert_layer(imageID, active_layer, 0, 0)
+    $gimp_iface.gimp_drawable_fill(active_layer, 1)
+    Image.new(width, height, imageID, active_layer)
+  end
+
+
+  def Image.new_loaded(path)
+    imageID = $gimp_iface.gimp_file_load(0, path, path)[0]
+    width = $gimp_iface.gimp_image_width(imageID)
+    height = $gimp_iface.gimp_image_height(imageID)
+    active_layer = $gimp_iface.gimp_image_get_active_layer(imageID)
+    Image.new(width, height, imageID, active_layer)
+  end
+
+  protected
+  
+  def initialize(width, height, imageID, active_layer)
+    @width = width
+    @height = height
+    @imageID = imageID
+    @active_layer = active_layer
+  end
   
 end
 
@@ -328,7 +340,6 @@ class Rgb
     @b = (rgb - @r) - @g    #All that remains is the relevent digits
   end
 
-  #The following rgb methods are untested
   def lighter()
     @r = rgb_clamp(@r + 16)
     @g = rgb_clamp(@g + 16)
@@ -358,6 +369,7 @@ class Rgb
     @rgb = ((@r << 16) | (@g << 8) | @b)
   end  
 end
+
 #***************************************************************
 #----------             Turtle Class            ----------------
 #***************************************************************
@@ -382,21 +394,13 @@ class Turtle
     @pen_down = true
   end
 
-  def get_angle
-    return @angle
-  end
+  attr_reader :world, :color, :angle, :pen_down, :brush
+
+  attr_writer :color, :brush
 
   def teleport(x, y)
     @col = x
     @row = y
-  end
-
-  def set_color(rgb)
-    @color = rgb
-  end
-
-  def set_brush(brush_name)
-    @brush = brush_name
   end
 
   def face(degrees)
@@ -407,16 +411,12 @@ class Turtle
     @angle = @angle+degrees % 360
   end
 
-  def set_pen_up()
+  def setPenUp()
     @pen_down = false
   end
 
-  def set_pen_down()
+  def setPenDown()
     @pen_down = true
-  end
-
-  def pen_down?()
-    return @pen_down
   end
 
   def clone()
@@ -464,21 +464,3 @@ class Turtle
 end
 
 
-#***************************************************************
-#----------           Image Selections          ----------------
-#***************************************************************
-
-
-#***************************************************************
-#----------           Image Load                ----------------
-#***************************************************************
-
-
-class LoadedImage < Image
-  def initialize(path)
-    @imageID = $gimp_iface.gimp_file_load(0, path, path)[0]
-    @width = $gimp_iface.gimp_image_width(@imageID)
-    @height = $gimp_iface.gimp_image_height(@imageID)
-    @active_layer = $gimp_iface.gimp_image_get_active_layer(@imageID)
-  end
-end
