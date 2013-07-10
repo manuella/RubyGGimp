@@ -45,22 +45,30 @@ $gimp_object = $gimp_service.object("/edu/grinnell/cs/glimmer/gimp")
 $gimp_object.introspect
 $gimp_iface = $gimp_object["edu.grinnell.cs.glimmer.pdb"]
 
-$ADD = 0
-$SUBTRACT = 1
-$REPLACE = 2
-$INTERSECT = 3
+# These are constants to be used with the select_ellipse and 
+# select_rectangle methods in the Image class. They should not be 
+# changed,or the methods will not work as expected. Alternately, you 
+# could memorize the numbers and use them as parameters in those 
+# methods, but we're trying to make your life easier, here. 
+ADD = 0
+SUBTRACT = 1
+REPLACE = 2
+INTERSECT = 3
+
+
 
 #Done: 
 #      -Images
 #      -Basic RGB
 #      -Turtles
 #      -Context Procedures
+#      -Selections
 
 #***************************************************************
 #----------            Context Tools            ----------------
 #***************************************************************
 
-def context_display_flush()
+def context_update_displays()
   $gimp_iface.gimp_displays_flush()
 end
 
@@ -258,37 +266,94 @@ end
 # (Untested)
 
 
-#Todo: 1. Complete drawings
-#      
+#Todo:      
 
 
-# class Drawings
-#   #Add render
-# end
-# class Unitcircle < Drawings
-#   @radius = 0
-#   @x = 0
-#   @y = 0
-#   def initialize(x, y, radius)
-#     @x = x
-#     @y = y
-#     @radius = radius
-#   end
-# end
+class Drawings
 
-# class Unitsquare < Drawings
-#   @side_len = 0
-#   @x = 0
-#   @y = 0
-#   def initialize(x, y, side_len)
-#     @x = x
-#     @y = y
-#     @side_len = side_len
-#   end
-#   def get_position
-#     return [x, y]
-#   end
-# end
+  @type
+  @color
+  @left
+  @top
+  @width
+  @height
+  
+  attr_read :x, :y, :width, :height, :type, :color
+ 
+  def initialize(type, color, left, top, width, height)
+    @type = type
+    @color = color
+    @left = left
+    @top = top
+    @width = width
+    @height = height
+  end
+
+  def unit_circle()
+    return Drawing.new("ellipse", context_get_fgcolor(), 0, 0, 1, 1)
+  end
+
+  def unit_square()
+    return Drawing.new("square", context_get_fgcolor(), 0, 0, 1, 1)
+  end
+  
+  def scale(factor)
+    # @left = @left * factor Check with Sam about this
+    # @top = @top * factor 
+    @height = @height * factor
+    @width = @width * factor
+  end
+
+  def hscale(factor)
+    @width = @width * factor
+    @left = @left * factor
+  end
+  
+  def vscale(factor)
+    @height = @height * factor
+    @top = @top * factor
+  end
+
+  def hshift(amount)
+    @left= @left + amount
+  end
+  
+  def vshift(amount)
+    @top = @top + amount
+  end
+
+  def recolor(color)
+    @color = color
+  end
+  
+  def render(image)
+    if (@type = "ellipse")
+      image.select_ellipse(REPLACE, @top, @left, @width, @height)
+      context_set_fgcolor(@color)
+      image.fill_selection()
+      image.select_none()
+    elsif (@type = "rectangle" || @type = "square")
+      image.select_rectangle(REPLACE, @top, @left, @width, @height)
+      context_set_fgcolor(@color)
+      image.fill_selection()
+      image.select_none()
+    else
+      puts "The drawing type #{@type} is invalid. It should be ellipse or rectangle."
+    end
+  end
+
+
+  private
+
+  def unit_circle()
+    return Drawing.new("ellipse", context_get_fgcolor(), 0, 0, 1, 1)
+  end
+
+  def unit_square()
+    return Drawing.new("square", context_get_fgcolor(), 0, 0, 1, 1)
+  end
+  
+end
 
 def image_draw_line(image, x0, y0, xf, yf)
   $gimp_iface.gimp_paintbrush(image.get_layer(), 0, 4, [x0, y0, xf, yf], 0, 0)
