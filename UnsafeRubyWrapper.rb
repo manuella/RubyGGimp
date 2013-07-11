@@ -136,43 +136,43 @@ end
 #like this makes sense, but if we're told other wise, we'll move
 #back to this vvv code.
 
-class Context
-  @bg
-  @fg
-  @brush
-  def initialize()
-    @bg = $gimp_iface.gimp_context_get_background()
-    @fg = $gimp_iface.gimp_context_get_foreground()
-    @brush =$gimp_iface. gimp_context_get_brush()
-  end
-  def flush_display()
-    $gimp_iface.gimp_displays_flush()
-  end
-  def set_bg(rgb)
-    @bg = rgb
-   $gimp_iface. gimp_context_set_background(rgb)
-  end
-  def get_bg()
-    @bg = $gimp_iface.gimp_context_get_background()
-    return @bg
-  end
-  def set_fg(rgb)
-    @fg = rgb
-   $gimp_iface. gimp_context_set_foreground(rgb)
-  end
-  def get_fg
-    @fg = $gimp_iface.gimp_context_get_foreground()
-    return @fg
-  end
-  def set_brush(brush)
-    @brush = brush
-    $gimp_iface.gimp_context_set_brush(brush)
-  end
-  def get_brush()
-    @brush = $gimp_iface.gimp_context_get_brush()
-    return @brush
-  end
-end
+# class Context
+#   @bg
+#   @fg
+#   @brush
+#   def initialize()
+#     @bg = $gimp_iface.gimp_context_get_background()
+#     @fg = $gimp_iface.gimp_context_get_foreground()
+#     @brush =$gimp_iface. gimp_context_get_brush()
+#   end
+#   def flush_display()
+#     $gimp_iface.gimp_displays_flush()
+#   end
+#   def set_bg(rgb)
+#     @bg = rgb
+#    $gimp_iface. gimp_context_set_background(rgb)
+#   end
+#   def get_bg()
+#     @bg = $gimp_iface.gimp_context_get_background()
+#     return @bg
+#   end
+#   def set_fg(rgb)
+#     @fg = rgb
+#    $gimp_iface. gimp_context_set_foreground(rgb)
+#   end
+#   def get_fg
+#     @fg = $gimp_iface.gimp_context_get_foreground()
+#     return @fg
+#   end
+#   def set_brush(brush)
+#     @brush = brush
+#     $gimp_iface.gimp_context_set_brush(brush)
+#   end
+#   def get_brush()
+#     @brush = $gimp_iface.gimp_context_get_brush()
+#     return @brush
+#   end
+# end
 
 #***************************************************************
 #----------            Image Class              ----------------
@@ -185,9 +185,7 @@ class Image
   @imageID
   @active_layer
   
-
   attr_reader :width, :height, :imageID, :active_layer
-
 
   def show
     $gimp_iface.gimp_display_new(@imageID)
@@ -225,8 +223,6 @@ class Image
     $gimp_iface.gimp_selection_none(@imageID)
   end
   
-
-
   private
   
   def Image.new_blank(width, height) 
@@ -269,7 +265,7 @@ end
 #Todo:      
 
 
-class Drawings
+class Drawing
 
   @type
   @color
@@ -278,61 +274,60 @@ class Drawings
   @width
   @height
   
-  attr_read :x, :y, :width, :height, :type, :color
- 
-  def initialize(type, color, left, top, width, height)
-    @type = type
-    @color = color
-    @left = left
-    @top = top
-    @width = width
-    @height = height
-  end
-
-  def unit_circle()
-    return Drawing.new("ellipse", context_get_fgcolor(), 0, 0, 1, 1)
-  end
-
-  def unit_square()
-    return Drawing.new("square", context_get_fgcolor(), 0, 0, 1, 1)
-  end
+  attr_reader :x, :y, :width, :height, :type, :color
   
+# Returns the bottom edge of the drawing
+  def bottom()
+    return @top + @height
+  end
+
+# Returns the right edge of the drawing
+  def right()
+    return @left + @width
+  end
+
   def scale(factor)
-    # @left = @left * factor Check with Sam about this
-    # @top = @top * factor 
-    @height = @height * factor
-    @width = @width * factor
+    @left *= factor
+    @top *= factor 
+    @height *= factor
+    @width *=  factor
+    self
   end
 
   def hscale(factor)
-    @width = @width * factor
-    @left = @left * factor
+    @width *= factor
+    @left *= factor
+    self
   end
   
   def vscale(factor)
     @height = @height * factor
-    @top = @top * factor
+    @top *= factor
+    self
   end
 
   def hshift(amount)
-    @left= @left + amount
+    @left += amount
+    self
   end
   
   def vshift(amount)
-    @top = @top + amount
+    @top += amount
+    self
   end
 
   def recolor(color)
     @color = color
+    self
   end
   
   def render(image)
-    if (@type = "ellipse")
+    if (@type == "ellipse")
       image.select_ellipse(REPLACE, @top, @left, @width, @height)
       context_set_fgcolor(@color)
       image.fill_selection()
       image.select_none()
-    elsif (@type = "rectangle" || @type = "square")
+    elsif (@type == "rectangle")
       image.select_rectangle(REPLACE, @top, @left, @width, @height)
       context_set_fgcolor(@color)
       image.fill_selection()
@@ -342,18 +337,50 @@ class Drawings
     end
   end
 
+  def to_image(width, height)
+    image = Image.new_blank(width, height)
+    self.render(image)
+    return image
+  end
+
+  protected
+
+  def initialize(type, color, left, top, width, height)
+    @type = type
+    @color = color
+    @left = left
+    @top = top
+    @width = width
+    @height = height
+  end
 
   private
 
-  def unit_circle()
-    return Drawing.new("ellipse", context_get_fgcolor(), 0, 0, 1, 1)
+  def Drawing.unit_circle()
+    Drawing.new("ellipse", 0, 0, 0, 1, 1)
   end
 
-  def unit_square()
-    return Drawing.new("square", context_get_fgcolor(), 0, 0, 1, 1)
+  def Drawing.unit_square()
+    Drawing.new("rectangle", 0, 0, 0, 1, 1)
   end
   
 end
+
+class DrawingGroup
+  @drawingArray
+  @currentIndex
+  
+  #initialize : make an empty array, set currentIndex to -1
+
+  # add: Adds a drawing or drawing group to the array, set currentIndex ++
+
+  #render: given an image, renders the drawing group in that image. 
+  #Any current selections are ignored 
+
+  #to_image: renders the drawing group in a new image with the given 
+  #width and height. 
+end
+
 
 def image_draw_line(image, x0, y0, xf, yf)
   $gimp_iface.gimp_paintbrush(image.get_layer(), 0, 4, [x0, y0, xf, yf], 0, 0)
@@ -429,7 +456,7 @@ class Rgb
     @rgb = ((@r << 16) | (@g << 8) | @b)
   end
   
-  def bluer #ew
+  def bluer 
     @b = rgb_clamp(@b + 32)
     @rgb = ((@r << 16) | (@g << 8) | @b)
   end  
@@ -497,6 +524,7 @@ class Turtle
   end
 
   def forward(dist)
+
     d2r = (@angle/180.0) * Math::PI
    
     newcol = @col + (dist * Math.cos(d2r))
@@ -527,5 +555,3 @@ class Turtle
     end
   end
 end
-
-
