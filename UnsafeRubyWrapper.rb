@@ -343,6 +343,23 @@ class Drawing
     return image
   end
 
+  def ellipse?()
+    return @type == "ellipse"
+  end
+
+  def circle?()
+    return (@height == @width) & (@type == "ellipse")
+  end
+
+  def rectangle?()
+    return @type == "rectangle"
+  end
+
+  def square?()
+    return (@height == @width) & (@type == "rectangle")
+  end
+      
+
   protected
 
   def initialize(type, color, left, top, width, height)
@@ -381,6 +398,9 @@ class DrawingGroup
   #width and height. 
 end
 
+#*****************
+#---------          Gimp Tools   
+#********************************************
 
 def image_draw_line(image, x0, y0, xf, yf)
   $gimp_iface.gimp_paintbrush(image.get_layer(), 0, 4, [x0, y0, xf, yf], 0, 0)
