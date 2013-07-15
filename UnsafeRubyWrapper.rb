@@ -59,7 +59,7 @@ INTERSECT = 3
 
 #Done: 
 #      -Images
-#      -Basic RGB
+#      -Colors
 #      -Turtles
 #      -Context Procedures
 #      -Selections
@@ -100,6 +100,8 @@ def flush_displays()
   $gimp_iface.gimp_displays_flush()
 end
 
+#The following two functions should be integrated into Colors
+
 def context_list_color_names()
   return $gimp_iface.ggimp_rgb_list()[1]
 end
@@ -138,49 +140,6 @@ end
 def rgb_clamp(num)
   return clamp(num, 0, 255)
 end
-     
-
-#This context class is unused. We do not think modeling context
-#like this makes sense, but if we're told other wise, we'll move
-#back to this vvv code.
-
-# class Context
-#   @bg
-#   @fg
-#   @brush
-#   def initialize()
-#     @bg = $gimp_iface.gimp_context_get_background()
-#     @fg = $gimp_iface.gimp_context_get_foreground()
-#     @brush =$gimp_iface. gimp_context_get_brush()
-#   end
-#   def flush_display()
-#     $gimp_iface.gimp_displays_flush()
-#   end
-#   def set_bg(rgb)
-#     @bg = rgb
-#    $gimp_iface. gimp_context_set_background(rgb)
-#   end
-#   def get_bg()
-#     @bg = $gimp_iface.gimp_context_get_background()
-#     return @bg
-#   end
-#   def set_fg(rgb)
-#     @fg = rgb
-#    $gimp_iface. gimp_context_set_foreground(rgb)
-#   end
-#   def get_fg
-#     @fg = $gimp_iface.gimp_context_get_foreground()
-#     return @fg
-#   end
-#   def set_brush(brush)
-#     @brush = brush
-#     $gimp_iface.gimp_context_set_brush(brush)
-#   end
-#   def get_brush()
-#     @brush = $gimp_iface.gimp_context_get_brush()
-#     return @brush
-#   end
-# end
 
 #***************************************************************
 #----------            Image Class              ----------------
@@ -420,9 +379,8 @@ end
 
 #Todo:
 #      -Add support for additional rgb functions that are in pdb
-#      -Possibly add support for html and HSV colors
+#      -Add support for @name
 
-#CHANGE NAME "Rgb" to "Color"
 
 
 class Color
@@ -602,8 +560,6 @@ class Color
     end
     @rgbInt = ((@r << 16) | (@g << 8) | @b)
   end
-
- #----------------------
   
   private
 
