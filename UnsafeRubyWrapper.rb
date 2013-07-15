@@ -100,6 +100,14 @@ def flush_displays()
   $gimp_iface.gimp_displays_flush()
 end
 
+def context_list_color_names()
+  return $gimp_iface.ggimp_rgb_list()[1]
+end
+
+def color_name_to_rgb(name)
+  return $gimp_iface.ggimp_rgb_parse(name)
+end
+
 class Flag
   @status = true
   def initialize()
@@ -407,79 +415,218 @@ def image_draw_line(image, x0, y0, xf, yf)
 end
 
 #***************************************************************
-#----------                Rgb Class            ----------------
+#----------                Color Class            ----------------
 #***************************************************************
 
 #Todo:
-#      -Bind @r/@g@/b between 0 and 255
 #      -Add support for additional rgb functions that are in pdb
 #      -Possibly add support for html and HSV colors
 
-class Rgb
+#CHANGE NAME "Rgb" to "Color"
+
+
+class Color
+
   @r
   @g
   @b
-  @rgb
+  @rgbInt
+  @hex
+  @name
 
-  def initialize(r, g, b)
-    @r = rgb_clamp(r)
-    @g = rgb_clamp(g)
-    @b = rgb_clamp(b)
-    @rgb = ((@r << 16) | (@g << 8) | @b)
-  end
   
-  attr_reader :r, :g, :b, :rgb
+  attr_reader :r, :g, :b, :rgb, :hex, :name
 
   def b=(b)
     @b = b
-    @rgb = (((@rgb >> 8) << 8) + b) #See set_rgb
+    @rgbInt = (((@rgbInt >> 8) << 8) + b) #See set_rgb
+    update_hsv()
+    update_hex()
   end
 
   def g=(g)
     @g = g
-    @rgb = (((@rgb << 8) >> 8) + (g << 8)) #see set_rgb
+    @rgbInt = (((@rgbInt << 8) >> 8) + (g << 8)) #see set_rgb
+    update_hsv()
+    update_hex()
   end
   
   def r=(r)
     @r = r
-    @rgb = (((@rgb << 16) >> 16) + (r << 16)) #see set_rgb
+    @rgbInt = (((@rgbInt << 16) >> 16) + (r << 16)) #see set_rgb
+    update_hsv()
+    update_hex()
   end
    
-  def rgb=(rgb)
-    @rgb = rgb
+  def rgbInt=(rgb)
+    @rgbInt = rgb
     @r = ((rgb << 8) >> 24) #Shift left to remove digits to the left
     @g = ((rgb << 16) >> 24) #Shift right to remove digits to the right
-    @b = (rgb - @r) - @g    #All that remains is the relevent digits
+    @b = ((rgb - @r) - @g)    #All that remains is the relevent digits
+    update_hsv()
+    update_hex()
   end
 
   def lighter()
     @r = rgb_clamp(@r + 16)
     @g = rgb_clamp(@g + 16)
     @b = rgb_clamp(@b + 16)
-    @rgb = ((@r << 16) | (@g << 8) | @b)
+    @rgbInt = ((@r << 16) | (@g << 8) | @b)
+    update_hsv()
+    update_hex()
   end
     
   def darker
     @r = rgb_clamp(@r - 16)
     @g = rgb_clamp(@g - 16)
     @b = rgb_clamp(@b - 16)
-    @rgb = ((@r << 16) | (@g << 8) | @b)
+    @rgbInt = ((@r << 16) | (@g << 8) | @b) 
+    update_hsv()
+    update_hex()
   end
 
   def redder
     @r = rgb_clamp(@r + 32)
-    @rgb = ((@r << 16) | (@g << 8) | @b)
+    @rgbInt = ((@r << 16) | (@g << 8) | @b)
+    update_hsv()
+    update_hex()
   end
   
   def greener
     @g = rgb_clamp(@g + 32)
-    @rgb = ((@r << 16) | (@g << 8) | @b)
+    @rgbInt = ((@r << 16) | (@g << 8) | @b)
+    update_hsv()
+    update_hex()
   end
   
   def bluer 
     @b = rgb_clamp(@b + 32)
-    @rgb = ((@r << 16) | (@g << 8) | @b)
-  end  
+    @rgbInt = ((@r << 16) | (@g << 8) | @b)
+    update_hsv()
+    update_hex()
+  end
+ 
+  def initialize(val, type)
+    if (type == "rgb_array")
+      @rgbInt = ((val[0] << 16) | (val[1]  << 8) | val[2])
+      @r = val[0]
+      @g = val[1]
+      @b = val[2]
+      update_hsv()
+      update_hex()
+    elsif type == "hsv_array"
+      @h = val[0]
+      @s = val[1]
+      @v = val[2]
+      update_rgb("hsv")
+      update_hex()
+    elsif type == "hex_string"
+      @hex = val
+      update_rgb("hex")
+      update_hsv()
+    end         
+  end
+
+  protected
+
+  def update_hsv() #rgb must be the most up-to-date value
+    newR = @r/255.0
+    newG = @g/255.0
+    newB = @b/255.0
+    max = [newR, newG, newB].max
+    min = [newR, newG, newB].min
+    delta = max - min
+    h = 0
+    s = delta / max
+    v = max
+    if delta == 0
+      h = 0
+    elsif newR.eql?(max)
+      h = 60 * (((newG - newB)/delta) % 6)
+    elsif newG.eql?(max)
+      h = 60 * (((newB - newR)/delta) + 2)
+    else
+      h = 60 * (((newR - newG)/delta) + 4)
+    end
+    @hsv = [h, s, v]
+    @h = h
+    @s = s
+    @v = v
+  end
+
+  def update_hex()
+    puts @r
+    hex_r = @r.to_s(16)
+    hex_g = @g.to_s(16)
+    hex_b = @b.to_s(16)
+    @hex = hex_r + hex_g + hex_b
+  end
+  
+  def update_rgb(type)
+    if (type == "hex")
+      @r = @hex[0, 2].hex
+      @g = @hex[2, 2].hex
+      @b = @hex[4, 2].hex
+    elsif (type == "hsv")
+      hi = (@h / 60).floor & 6
+      f = (@h / 60.0) - hi
+      p = @v * (1 - @s)
+      q = @v * (1 - (f * @s))
+      t = @v * (1 - (@s * (1 - f))) 
+      if hi == 0
+        @r = (255 * @v).round()
+        @g = (255 * t).round()
+        @b = (255 * p).round()
+      elsif hi == 1
+        @r = (255 * q).round()
+        @g = (255 * @v).round()
+        @b = (255 * p).round()
+      elsif hi == 2
+        @r = (255 * p).round()
+        @g = (255 * @v).round()
+        @b = (255 * t).round()
+      elsif hi == 3
+        @r = (255 * p).round()
+        @g = (255 * q).round()
+        @b = (255 * @v).round()
+      elsif hi == 4
+        @r = (255 * t).round()
+        @g = (255 * p).round()
+        @b = (255 * @v).round()
+      else 
+        @r = (255 * @v).round()
+        @g = (255 * p).round()
+        @b = (255 * q).round()
+      end  
+        
+    end
+    @rgbInt = ((@r << 16) | (@g << 8) | @b)
+  end
+
+ #----------------------
+  
+  private
+
+  def Color.new_rgb(r, g, b)
+    r = rgb_clamp(r)
+    g = rgb_clamp(g)
+    b = rgb_clamp(b)
+    rgb_array = [r, g, b]
+    Color.new(rgb_array, "rgb_array")
+  end
+  
+  def Color.new_hsv(h, s, v)
+    hsv_array= [h, s, v]
+    Color.new(hsv_array, "hsv_array")
+  end
+  
+  def Color.new_hex(hex_string)
+    Color.new(hex_string, "hex_string")
+  end
+
+  #private :new_rgb, :new_hsv, :new_hex
+  #protected :update_hsv, :update_hex, :update_rgb
+
 end
 
 #***************************************************************
@@ -509,7 +656,7 @@ class Turtle
   attr_reader :world, :color, :angle, :pen_down, :brush
 
   attr_writer :color, :brush
-
+  
   def teleport(x, y)
     @col = x
     @row = y
@@ -522,7 +669,7 @@ class Turtle
   def turn(degrees)
     @angle = @angle+degrees % 360
   end
-
+  
   def setPenUp()
     @pen_down = false
   end
