@@ -392,11 +392,11 @@ class DrawingGroup
   #Any current selections are ignored 
   
   def render(image)
-    $i = 0
+    i = 0
     len = @drawingArray.length()
     begin
       @drawingArray[i].render(image)
-    end while $i > len  
+    end while i > len  
     end
 
   #to_image: renders the drawing group in a new image with the given 
@@ -406,16 +406,17 @@ class DrawingGroup
     newimage = Image.new_blank(width, height)
     len = @drawingArray.length()
     i = 0
-    begin
+    while i < len
       @drawingArray[i].render(newimage)
-    end while i > len  
+      i += 1
+    end 
     return newimage
   end
   
 end
 
-#*****************
-#---------          Gimp Tools   
+#********************************************
+#---------          Gimp Tools    -----------
 #********************************************
 
 def image_draw_line(image, x0, y0, xf, yf)
