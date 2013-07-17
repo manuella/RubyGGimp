@@ -717,7 +717,7 @@ class Turtle
     @col = newcol
     @row = newrow
 
-    if $context_preserve #doesn't seem to work? Setting $context_preserve to false in testing.rb does not change the brush/color back
+    if $context_preserve
       if change_color
         context_set_fgcolor(color_tmp)
       end
