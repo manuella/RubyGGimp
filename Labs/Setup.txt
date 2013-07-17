@@ -1,0 +1,44 @@
+#############################################
+#                                           #
+#           Setting up RubyGGimp            #
+#                                           #
+#############################################
+
+This is not near completion:
+     Todo:
+	1. Add Gimp setup
+	2. Add specific library names
+	3. Seperate usage and setup instructions
+
+Prerequisites: DBus, Gimp with MediaScript Gimp Plugin,
+Ruby (2.0 or later), and RubyDBus.
+
+Setup:
+
+1. Get RVM and ruby (Ruby version manager)
+       $ \curl -L https://get.rvm.io | bash
+2. Install Ruby Gems
+       http://rubygems.org/pages/download
+3. Install RubyDBus
+       gem install dbus
+4. GIMP STUFF (REFERENCE GUIDES IN PYTHONGGIMP/LOUDGIMP)
+	       
+5. Download our libraries
+
+
+Use:
+
+1. Open the Gimp
+
+2. From the top bar, select MediaScript-> DBus Server.
+   This will start the Gimp DBus plugin.
+   
+3. Create a file ending in ".rb". This will be where your
+   code goes. Open this file using a text editor such as 
+   emacs. This can also be accomplished by typing emacs
+   filename.rb into the terminal
+   
+4. Compile and run your code:
+        $ruby yourfilename.rb
+	
+5. Gimp will not execute the instructions given

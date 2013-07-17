@@ -1,0 +1,24 @@
+1. Open Gimp
+
+2. MediaScripting -> "DBus Server"
+
+3. Open emacs
+
+4. File -> Visit New File [c-x c-f]
+
+5. Click on the lowest most white space
+
+6. A sub-window should appear, click within it to select it
+
+7. Hold down your alt key and press x simultaneously
+
+8. This will bring up a prompt in the bottom whitespace
+
+9. Type shell in here
+
+10. Select the lower sub-window, and type the three letters irb,
+then press enter.
+
+-You can resize the bottom window by clicking and dragging the middle
+barrier
+
