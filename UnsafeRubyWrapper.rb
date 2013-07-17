@@ -390,10 +390,7 @@ class DrawingGroup
     when DrawingGroup
       @drawingArray = (@drawingArray << new_element.drawingArray).flatten
     when Drawing
-      puts "Array: #{@drawingArray}"
-      puts "New Element: #{new_element}"
       @drawingArray << new_element
-      puts "End result: #{@drawingArray}"
     else
       # Make this an error instead of a printed statement
       puts "The element is not a drawing or a drawing group."
@@ -410,7 +407,6 @@ class DrawingGroup
     begin
       @drawingArray[i].render(image)
       i += 1
-      puts "Rendering: #{@drawingArray[i]}"
     end while i < len
   end
 
@@ -580,7 +576,6 @@ class Color
   end
 
   def update_hex()
-    puts @r
     hex_r = @r.to_s(16)
     hex_g = @g.to_s(16)
     hex_b = @b.to_s(16)
