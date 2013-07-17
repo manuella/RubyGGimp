@@ -386,19 +386,21 @@ class DrawingGroup
   # add: Adds a drawing or drawing group to the array, set currentIndex
   def add(new_element)
 
-    case new_element.kind_of?
-
+    case new_element
     when DrawingGroup
       @drawingArray = (@drawingArray << new_element.drawingArray).flatten
     when Drawing
+      puts "Array: #{@drawingArray}"
+      puts "New Element: #{new_element}"
       @drawingArray << new_element
+      puts "End result: #{@drawingArray}"
     else
       # Make this an error instead of a printed statement
       puts "The element is not a drawing or a drawing group."
     end
-
+    
   end
-
+  
   #render: given an image, renders the drawing group in that image. 
   #Any current selections are ignored 
   
@@ -407,8 +409,10 @@ class DrawingGroup
     len = @drawingArray.length()
     begin
       @drawingArray[i].render(image)
-    end while i > len  
-    end
+      i += 1
+      puts "Rendering: #{@drawingArray[i]}"
+    end while i < len
+  end
 
   #to_image: renders the drawing group in a new image with the given 
   #width and height. Returns an imageID
@@ -423,7 +427,6 @@ class DrawingGroup
     end 
     return newimage
   end
-  
 end
 
 #********************************************
@@ -452,7 +455,6 @@ class Color
   @rgbInt
   @hex
   @name
-
   
   attr_reader :r, :g, :b, :rgb, :hex, :name
 
@@ -462,7 +464,7 @@ class Color
     update_hsv()
     update_hex()
   end
-
+  
   def g=(g)
     @g = g
     @rgbInt = (((@rgbInt << 8) >> 8) + (g << 8)) #see set_rgb
@@ -550,7 +552,6 @@ class Color
     end
   end         
   
-  
   protected
 
   def update_hsv() #rgb must be the most up-to-date value
@@ -587,6 +588,7 @@ class Color
   end
   
   def update_rgb(type)
+
     if (type == "hex")
       @r = @hex[0, 2].hex
       @g = @hex[2, 2].hex
@@ -675,7 +677,6 @@ class Turtle
   end
 
   attr_reader :world, :color, :angle, :pen_down, :brush
-
   attr_writer :color, :brush
   
   def teleport(x, y)
@@ -735,7 +736,7 @@ class Turtle
     image_draw_line(@world, @col, @row, newcol, newrow)
     @col = newcol
     @row = newrow
-
+    
     if $context_preserve
       if change_color
         context_set_fgcolor(color_tmp)
@@ -778,6 +779,3 @@ def new_layer(image)
   layer = $gimp_iface.gimp_layer_new(image, image.width, image.height, 0, name, 100, 0)
   return $gimp_iface.gimp_image_insert_layer(image, layer, 0, -1)
 end
-
-
-  
