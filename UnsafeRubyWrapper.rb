@@ -3,8 +3,6 @@
 
 #The start of a ruby wrapper library for ggimp
 
-
-
 #***************************************************************
 #--- Set up the Ruby/Dbus environment, then aquire the proxy  --
 #***************************************************************
@@ -364,6 +362,10 @@ class Drawing
   end  
 end
 
+#********************************************
+#---------       DrawingGroup     -----------
+#********************************************
+
 class DrawingGroup
   @drawingArray
   @currentIndex
@@ -420,7 +422,7 @@ end
 #********************************************
 
 def image_draw_line(image, x0, y0, xf, yf)
-  $gimp_iface.gimp_paintbrush(image.get_layer(), 0, 4, [x0, y0, xf, yf], 0, 0)
+  $gimp_iface.gimp_paintbrush(image.active_layer(), 0, 4, [x0, y0, xf, yf], 0, 0)
 end
 
 #***************************************************************
@@ -705,20 +707,28 @@ class Turtle
     
     color_tmp = context_get_fgcolor()
     brush_tmp = context_get_brush()
-    change_color = false
-    change_brush = false
-    if @color != color_tmp
-      change_color = true
+
+    change_color = @color != color_tmp
+    change_brush = @brush != brush_tmp
+
+    if change_color
       context_set_fgcolor(@color)
     end
-    if @brush != brush_tmp
-      change_brush = true
+
+    if change_brush
       context_set_brush(@brush)
     end
+
     image_draw_line(@world, @col, @row, newcol, newrow)
     @col = newcol
     @row = newrow
-    if $context_preserve #doesn't seem to work? Setting $context_preserve to false in testing.rb doesn't keep from changing back
+    puts $context_preserve
+    puts @color
+    puts "Color_tmp: #{color_tmp}"
+    puts "change_color: #{change_color}"
+    puts "brush_tmp: #{brush_tmp}"
+    puts "change_brush: #{change_brush}"
+    if $context_preserve #doesn't seem to work? Setting $context_preserve to false in testing.rb does not change the brush/color back
       if change_color
         context_set_fgcolor(color_tmp)
       end
@@ -726,5 +736,6 @@ class Turtle
         context_set_brush(brush_tmp)
       end
     end
+    puts @color
   end
 end
