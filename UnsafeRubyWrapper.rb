@@ -107,13 +107,7 @@ $context_preserve = Flag.new()
 # Marsha came up with a better method of "Clamping", we should use that
 # instead
 def clamp(num, lbound, ubound)
-  if num < lbound
-    num = lbound
-  end
-  if num > ubound
-    num = ubound
-  end
-  return num
+  return [lbound, [num, ubound].min].max
 end
 
 def rgb_clamp(num)
@@ -722,12 +716,7 @@ class Turtle
     image_draw_line(@world, @col, @row, newcol, newrow)
     @col = newcol
     @row = newrow
-    puts $context_preserve
-    puts @color
-    puts "Color_tmp: #{color_tmp}"
-    puts "change_color: #{change_color}"
-    puts "brush_tmp: #{brush_tmp}"
-    puts "change_brush: #{change_brush}"
+
     if $context_preserve #doesn't seem to work? Setting $context_preserve to false in testing.rb does not change the brush/color back
       if change_color
         context_set_fgcolor(color_tmp)
@@ -736,6 +725,5 @@ class Turtle
         context_set_brush(brush_tmp)
       end
     end
-    puts @color
   end
 end
