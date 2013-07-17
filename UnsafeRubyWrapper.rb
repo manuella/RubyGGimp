@@ -22,12 +22,14 @@ $gimp_iface = $gimp_object["edu.grinnell.cs.glimmer.pdb"]
 # changed,or the methods will not work as expected. Alternately, you 
 # could memorize the numbers and use them as parameters in those 
 # methods, but we're trying to make your life easier, here. 
+
 ADD = 0
 SUBTRACT = 1
 REPLACE = 2
 INTERSECT = 3
 
-
+#Error tracking:
+$error = nil
 
 #Done: 
 #      -Images
@@ -201,6 +203,10 @@ class Image
     @active_layer = active_layer
   end
   
+  # adds a layer to the image. This procedure does not change the active layer.
+  # def add_layer(layer)
+  #   layer = 
+  # end
 end
 
 
@@ -217,7 +223,7 @@ end
 # to render, it renders it onto the active layer of the given image.
 
 class Drawing
-
+  
   @type
   @color
   @left
@@ -231,7 +237,7 @@ class Drawing
   def bottom()
     return @top + @height
   end
-
+  
 # Returns the right edge of the drawing
   def right()
     return @left + @width
@@ -280,21 +286,26 @@ class Drawing
   
   #Renders the drawing onto the given image.
   def render(image)
-    if (@type == "ellipse")
+
+    case @type
+    when "ellipse"
       image.select_ellipse(REPLACE, @top, @left, @width, @height)
       context_set_fgcolor(@color)
       image.fill_selection()
       image.select_none()
-    elsif (@type == "rectangle")
+
+    when "rectangle"
       image.select_rectangle(REPLACE, @top, @left, @width, @height)
       context_set_fgcolor(@color)
       image.fill_selection()
       image.select_none()
+
     else
       puts "The drawing type #{@type} is invalid. It should be ellipse or rectangle."
     end
+    
   end
-
+  
   #Renders the drawing onto a new image of the given width and height
   def to_image(width, height)
     image = Image.new_blank(width, height)
@@ -374,14 +385,18 @@ class DrawingGroup
 
   # add: Adds a drawing or drawing group to the array, set currentIndex
   def add(new_element)
-    if new_element.kind_of? DrawingGroup
+
+    case new_element.kind_of?
+
+    when DrawingGroup
       @drawingArray = (@drawingArray << new_element.drawingArray).flatten
-    elsif new_element.kind_of? Drawing
+    when Drawing
       @drawingArray << new_element
     else
       # Make this an error instead of a printed statement
       puts "The element is not a drawing or a drawing group."
     end
+
   end
 
   #render: given an image, renders the drawing group in that image. 
@@ -511,26 +526,31 @@ class Color
   end
  
   def initialize(val, type)
-    if (type == "rgb_array")
+    
+    case type
+    when "rgb_array"
       @rgbInt = ((val[0] << 16) | (val[1]  << 8) | val[2])
       @r = val[0]
       @g = val[1]
       @b = val[2]
       update_hsv()
       update_hex()
-    elsif type == "hsv_array"
+    when "hsv_array"
       @h = val[0]
       @s = val[1]
       @v = val[2]
       update_rgb("hsv")
       update_hex()
-    elsif type == "hex_string"
+    when "hex_string"
       @hex = val
       update_rgb("hex")
       update_hsv()
-    end         
-  end
-
+    else
+      $error = "Color type not recognized by Color.initialize"
+    end
+  end         
+  
+  
   protected
 
   def update_hsv() #rgb must be the most up-to-date value
@@ -577,23 +597,25 @@ class Color
       p = @v * (1 - @s)
       q = @v * (1 - (f * @s))
       t = @v * (1 - (@s * (1 - f))) 
-      if hi == 0
+     
+      case hi
+      when 0
         @r = (255 * @v).round()
         @g = (255 * t).round()
         @b = (255 * p).round()
-      elsif hi == 1
+      when 1
         @r = (255 * q).round()
         @g = (255 * @v).round()
         @b = (255 * p).round()
-      elsif hi == 2
+      when 2
         @r = (255 * p).round()
         @g = (255 * @v).round()
         @b = (255 * t).round()
-      elsif hi == 3
+      when 3 
         @r = (255 * p).round()
         @g = (255 * q).round()
         @b = (255 * @v).round()
-      elsif hi == 4
+      when 4
         @r = (255 * t).round()
         @g = (255 * p).round()
         @b = (255 * @v).round()
@@ -625,9 +647,6 @@ class Color
   def Color.new_hex(hex_string)
     Color.new(hex_string, "hex_string")
   end
-
-  #private :new_rgb, :new_hsv, :new_hex
-  #protected :update_hsv, :update_hex, :update_rgb
 
 end
 
@@ -727,3 +746,38 @@ class Turtle
     end
   end
 end
+
+
+#***************************************************************
+#----------             .gif tools              ----------------
+#***************************************************************
+
+# Instructions:
+# http://www.gimp.org/tutorials/Simple_Animations/
+
+# To make .gifs, we need
+#   1. To be able to manipulate layers
+#   2. To be able to manipulate drawings (Complete)
+#   3. To be able to create layer comments
+#   4. Application of a filter to multiple layers 
+#         (GAP [gimp animation plugin])
+#   5. To be able make an image from a layer
+#   6. To use Animation Optimize
+#   7. To "Index" the image
+#   8. Save [export] the image as a .gif
+#   8. To use "Animation playback"
+
+
+
+#***************************************************************
+#----------         Layer Manipulation          ----------------
+#***************************************************************
+
+def new_layer(image)
+  name = ""
+  layer = $gimp_iface.gimp_layer_new(image, image.width, image.height, 0, name, 100, 0)
+  return $gimp_iface.gimp_image_insert_layer(image, layer, 0, -1)
+end
+
+
+  
