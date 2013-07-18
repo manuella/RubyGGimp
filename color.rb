@@ -1,8 +1,6 @@
 #!/ruby/bin/env ruby
 
-require './UnsafeRubyWrapper.rb'
-
-
+require 'dbus' 
 
 def rgb_to_int(r, g, b)
    ((r << 16) | (g << 8) | b)
@@ -43,7 +41,7 @@ class Color
   attr_reader :rgbInt
 
   def initialize (int)
-    int = [0, [int, 16777215].min].max
+    int = [0, ([int, 16777215].min)].max
     @rgbInt = int
   end
 

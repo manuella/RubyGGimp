@@ -73,9 +73,9 @@ def context_set_brush(brush_name)
   $gimp_iface.gimp_context_set_brush(brush_name)
 end
 
-def flush_displays()
-  $gimp_iface.gimp_displays_flush()
-end
+# def flush_displays()
+#   $gimp_iface.gimp_displays_flush()
+# end
 
 #The following two functions should be integrated into Colors
 
@@ -430,7 +430,8 @@ end
 #********************************************
 
 def image_draw_line(image, x0, y0, xf, yf)
-  $gimp_iface.gimp_paintbrush(image.active_layer(), 0, 4, [x0, y0, xf, yf], 0, 0)
+  $gimp_iface.gimp_paintbrush(image.active_layer(), 0, 4, 
+                              [x0, y0, xf, yf], 0, 0)
 end
 
 #***************************************************************
@@ -448,11 +449,15 @@ class Color
   @r
   @g
   @b
+  @hsv
+  @h
+  @s
+  @v
   @rgbInt
   @hex
   @name
   
-  attr_reader :r, :g, :b, :rgb, :hex, :name
+  attr_reader :r, :g, :b, :rgb, :hex, :name, :h, :s, :v, :hsv
 
   def b=(b)
     @b = b
