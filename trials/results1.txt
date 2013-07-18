@@ -1,0 +1,32 @@
+The following tests were completed using the source in this
+directory. The trials are also in this directory.
+
+This is test one, it corresponds to unsafetrial1.rb 
+and colortrial1.rb
+
+
+Trial		|User CPU |  System   | Usr+Sys   |  Elapsed Real
+                |  time   | CPU time  | CPU time  |    time
+
+unsafetrial1.rb
+
+run 1		0.930000    0.000000    0.930000  (  0.959071)
+run 2	  	0.920000    0.000000    0.920000  (  0.948160)
+run 3		0.910000    0.000000    0.910000  (  0.947942)
+run 4		0.910000    0.000000    0.910000  (  0.931799)
+
+    			         mean             (  0.946743)
+
+colortrial1.rb
+
+run 1		0.780000    0.010000    0.790000  (  0.811191)
+run 2  		0.750000    0.010000    0.760000  (  0.774753)
+run 3  		0.790000    0.000000    0.790000  (  0.814327)
+run 4 		0.780000    0.000000    0.780000  (  0.791229)
+
+    			         mean		  (  0.797875)
+
+				 mean difference: (  0.148868)
+				 
+				 colortrial1.rb ran 16 percent
+				 faster on average
