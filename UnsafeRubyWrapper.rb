@@ -10,6 +10,7 @@
 #!/ruby/bin/env ruby
 
 require 'dbus'
+require './context.rb'
 
 $bus = DBus::SessionBus.instance
 $gimp_service = $bus.service("edu.grinnell.cs.glimmer.GimpDBus")
@@ -28,8 +29,6 @@ SUBTRACT = 1
 REPLACE = 2
 INTERSECT = 3
 
-#Error tracking:
-$error = nil
 
 #Done: 
 #      -Images
@@ -41,41 +40,6 @@ $error = nil
 #***************************************************************
 #----------            Context Tools            ----------------
 #***************************************************************
-
-#Used to call pdb functions which change context features within gimp
-
-
-def context_update_displays()
-  $gimp_iface.gimp_displays_flush()
-end
-
-def context_set_bgcolor(rgb)
-  $gimp_iface.gimp_context_set_background(rgb)
-end
-
-def context_set_fgcolor(rgb)
-  $gimp_iface.gimp_context_set_foreground(rgb)
-end
-
-def context_get_bgcolor()
-  return $gimp_iface.gimp_context_get_background()[0]
-end
-
-def context_get_fgcolor()
-  return $gimp_iface.gimp_context_get_foreground()[0]
-end
-
-def context_get_brush()
-  return $gimp_iface.gimp_context_get_brush()[0]
-end
-
-def context_set_brush(brush_name)
-  $gimp_iface.gimp_context_set_brush(brush_name)
-end
-
-# def flush_displays()
-#   $gimp_iface.gimp_displays_flush()
-# end
 
 #The following two functions should be integrated into Colors
 
