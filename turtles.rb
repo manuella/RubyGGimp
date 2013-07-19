@@ -9,25 +9,25 @@
 # classes, which are TBD.
 
 
- #          ___________
- #         | Interface |
- #         =============
- #         /          \
- #        |            |
- #      ______       ______
- #     |Mirror|     |Normal|
- #     =======      ========
- #    /      \      /      \ 
- #  ___     _       _      ___
- # |   |   | |     | |    |   |
- #  ===    ==      ===     ===
+#          ___________
+#         | Interface |
+#         =============
+#         /          \
+#        |            |
+#      ______       ______
+#     |Mirror|     |Normal|
+#     =======      ========
+#    /      \      /      \ 
+#  ___       _    _      ___
+# |   |     | |  | |    |   |
+#  ===       =    =      ===
 
 
 #!/ruby/bin/env ruby
 require 'dbus'
 
 #***************************************************************
-#----------             Turtle Class            ----------------
+#                       Normal Turtle                          *
 #***************************************************************
 
 
@@ -35,6 +35,39 @@ require 'dbus'
 module TurtleTraits
   
   attr_reader :world, :col, :row, :color, :col, :row, :angle, :pen_down
+
+  def forward(dist)
+    
+    d2r = (self.angle/180.0) * Math::PI
+    
+    newcol = self.col + (dist * Math.cos(d2r))
+    newrow = self.row + (dist * Math.sin(d2r))
+    
+    color_tmp = context_get_fgcolor()
+    brush_tmp = context_get_brush()
+    
+    change_color = self.color != color_tmp
+    change_brush = self.brush != brush_tmp
+    
+    if change_color
+      context_set_fgcolor(self.color)
+    end
+    
+    if change_brush
+      context_set_brush(self.brush)
+    end
+    image_draw_line(self.world, self.col, self.row, newcol, newrow)
+    self.col = newcol
+    self.row = newrow
+    
+    if $context_preserve
+       if change_color
+         context_set_fgcolor(color_tmp)
+       end
+      if change_brush
+        context_set_brush(brush_tmp)
+      end
+    end
 
   def clone()
     turtle = self.class.new(self.world)
@@ -70,6 +103,12 @@ module TurtleTraits
   end 
 end
 
+
+#*********************************************
+#
+#*********************************************
+
+
 class Turtle
   include TurtleTraits
   @world
@@ -90,45 +129,19 @@ class Turtle
     @pen_down = true
   end
   
-  def forward(dist)
-    
-    d2r = (@angle/180.0) * Math::PI
-    
-    newcol = @col + (dist * Math.cos(d2r))
-    newrow = @row + (dist * Math.sin(d2r))
-    
-    color_tmp = context_get_fgcolor()
-    brush_tmp = context_get_brush()
-    
-    change_color = @color != color_tmp
-    change_brush = @brush != brush_tmp
-    
-    if change_color
-      context_set_fgcolor(@color)
-    end
-    
-    if change_brush
-      context_set_brush(@brush)
-    end
-    image_draw_line(@world, @col, @row, newcol, newrow)
-    @col = newcol
-    @row = newrow
-    
-    if $context_preserve
-       if change_color
-         context_set_fgcolor(color_tmp)
-       end
-      if change_brush
-        context_set_brush(brush_tmp)
-      end
-    end
+  def forward(distance)
+    TurtleTraits.forward(distance)
   end
 end
 
+class SaneTurtle >> Turtle
+end
+
+#*********************************************
+# Mirror Turtle                              *
+#*********************************************
 
 
-
-#http://stackoverflow.com/questions/17395860/how-to-reflect-a-line-over-another-line
 class MirrorTurtle
   include TurtleTraits
 
@@ -152,8 +165,7 @@ class MirrorTurtle
     @reflection_line_slope = 0
   end
 
-  def forward(dist)
-
+  def forward(distance)
     line_offset = ((@reflection_line_slope - @angle).abs())
 
     if @angle > @reflection_line_slope
@@ -162,44 +174,22 @@ class MirrorTurtle
     else
       result_angle = @reflection_line_slope - line_offset
     end
+    
+    TurtleTraits.forward(distance)
 
-    d2r = (@angle/180.0) * Math::PI
-    d2rm = (result_angle/180.0) * Math::PI
+    angle_tmp = @angle
     
-    newcol = @col + (dist * Math.cos(d2r))
-    newrow = @row + (dist * Math.sin(d2r))
+    @angle = result_angle
     
-    newcolm= @col + (dist * Math.cos(d2rm))
-    newrowm = @row + (dist * Math.sin(d2rm))
-                                       
-    color_tmp = context_get_fgcolor()
-    brush_tmp = context_get_brush()
+    TurtleTraits.forward(distance)
     
-    change_color = @color != color_tmp
-    change_brush = @brush != brush_tmp
-    
-    if change_color
-      context_set_fgcolor(@color)
-    end
-    
-    if change_brush
-      context_set_brush(@brush)
-    end
+    @angle = angle_tmp
+  def
+end
 
-    image_draw_line(@world, @col, @row, newcol, newrow)
-    image_draw_line(@world, @col, @row, newcolm, newrowm)
 
-    @col = newcol
-    @row = newrow
-    
-    if $context_preserve
-       if change_color
-         context_set_fgcolor(color_tmp)
-       end
-      if change_brush
-        context_set_brush(brush_tmp)
-      end
-    end
-  end
-  
+
+# "Shifts" the color upon movement forward, gives one color to mirrored turtle,
+# and the remaining color to the original turtle.
+class ColorShiftingTurtle << MirrorTurtle
 end
