@@ -106,7 +106,7 @@ class Image
     if layerList.include? layerID
       @active_layer = layerID
     else
-      puts "Invalid layer ID for this image: #{@imageID}"
+      raise Arguement "Invalide layer ID for this image: #{@imageID}"
     end
     
   end
@@ -166,11 +166,6 @@ class Image
     @imageID = imageID
     @active_layer = active_layer
   end
-  
-  # adds a layer to the image. This procedure does not change the active layer.
-  # def add_layer(layer)
-  #   layer = 
-  # end
 end
 
 
@@ -265,7 +260,7 @@ class Drawing
       image.select_none()
 
     else
-      puts "The drawing type #{@type} is invalid. It should be ellipse or rectangle."
+      raise Argument "Field @type is invalid drawing type"
     end
     
   end
@@ -356,8 +351,7 @@ class DrawingGroup
     when Drawing
       @drawingArray << new_element
     else
-      # Make this an error instead of a printed statement
-      puts "The element is not a drawing or a drawing group."
+      raise Argument "New_element (#{@new_element}) is not a valid input"
     end
     
   end
@@ -513,7 +507,7 @@ class Color
       update_rgb("hex")
       update_hsv()
     else
-      $error = "Color type not recognized by Color.initialize"
+      
     end
   end         
   
