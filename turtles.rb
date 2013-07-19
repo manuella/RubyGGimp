@@ -11,7 +11,7 @@
 
  #          ___________
  #         | Interface |
- #         ============
+ #         =============
  #         /          \
  #        |            |
  #      ______       ______
@@ -125,6 +125,10 @@ class Turtle
   end
 end
 
+
+
+
+#http://stackoverflow.com/questions/17395860/how-to-reflect-a-line-over-another-line
 class MirrorTurtle
   include TurtleTraits
 
@@ -135,6 +139,7 @@ class MirrorTurtle
   @row
   @angle
   @pen_down
+  @reflection_line_slope
 
   def initialize(image)
     @world = image
@@ -144,10 +149,57 @@ class MirrorTurtle
     @brush = "Circle (01)"
     @color = context_get_fgcolor()
     @pen_down = true
+    @reflection_line_slope = 0
   end
-  
-  def forward
-    #not yet implemented
+
+  def forward(dist)
+
+    line_offset = ((@reflection_line_slope - @angle).abs())
+
+    if @angle > @reflection_line_slope
+      result_angle = @reflection_line_slope - line_offset
+    
+    else
+      result_angle = @reflection_line_slope - line_offset
+    end
+
+    d2r = (@angle/180.0) * Math::PI
+    d2rm = (result_angle/180.0) * Math::PI
+    
+    newcol = @col + (dist * Math.cos(d2r))
+    newrow = @row + (dist * Math.sin(d2r))
+    
+    newcolm= @col + (dist * Math.cos(d2rm))
+    newrowm = @row + (dist * Math.sin(d2rm))
+                                       
+    color_tmp = context_get_fgcolor()
+    brush_tmp = context_get_brush()
+    
+    change_color = @color != color_tmp
+    change_brush = @brush != brush_tmp
+    
+    if change_color
+      context_set_fgcolor(@color)
+    end
+    
+    if change_brush
+      context_set_brush(@brush)
+    end
+
+    image_draw_line(@world, @col, @row, newcol, newrow)
+    image_draw_line(@world, @col, @row, newcolm, newrowm)
+
+    @col = newcol
+    @row = newrow
+    
+    if $context_preserve
+       if change_color
+         context_set_fgcolor(color_tmp)
+       end
+      if change_brush
+        context_set_brush(brush_tmp)
+      end
+    end
   end
   
 end
