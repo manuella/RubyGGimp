@@ -10,6 +10,7 @@
 #!/ruby/bin/env ruby
 
 require 'dbus'
+require './turtles.rb'
 require './context.rb'
 
 $bus = DBus::SessionBus.instance
@@ -40,6 +41,10 @@ INTERSECT = 3
 #***************************************************************
 #----------            Context Tools            ----------------
 #***************************************************************
+
+#Init singleton context
+$context = Context.instance()
+
 
 #The following two functions should be integrated into Colors
 
@@ -249,13 +254,13 @@ class Drawing
     case @type
     when "ellipse"
       image.select_ellipse(REPLACE, @top, @left, @width, @height)
-      context_set_fgcolor(@color)
+      $context.set_fgcolor(@color)
       image.fill_selection()
       image.select_none()
 
     when "rectangle"
       image.select_rectangle(REPLACE, @top, @left, @width, @height)
-      context_set_fgcolor(@color)
+      $context.set_fgcolor(@color)
       image.fill_selection()
       image.select_none()
 
@@ -630,7 +635,7 @@ class Turtle
     @row = 0
     @angle = 0
     @brush = "Circle (01)"
-    @color = context_get_fgcolor()
+    @color = $context.get_fgcolor()
     @pen_down = true
   end
 
@@ -677,18 +682,18 @@ class Turtle
     newcol = @col + (dist * Math.cos(d2r))
     newrow = @row + (dist * Math.sin(d2r))
     
-    color_tmp = context_get_fgcolor()
-    brush_tmp = context_get_brush()
+    color_tmp = $context.get_fgcolor()
+    brush_tmp = $context.get_brush()
 
     change_color = @color != color_tmp
     change_brush = @brush != brush_tmp
 
     if change_color
-      context_set_fgcolor(@color)
+      $context.set_fgcolor(@color)
     end
 
     if change_brush
-      context_set_brush(@brush)
+      $context.set_brush(@brush)
     end
 
     image_draw_line(@world, @col, @row, newcol, newrow)
@@ -697,10 +702,10 @@ class Turtle
     
     if $context_preserve
       if change_color
-        context_set_fgcolor(color_tmp)
+        $context.set_fgcolor(color_tmp)
       end
       if change_brush
-        context_set_brush(brush_tmp)
+        $context.set_brush(brush_tmp)
       end
     end
   end

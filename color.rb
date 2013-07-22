@@ -174,9 +174,14 @@ class HexColor < Color
   @hexString
 
   def initialize(hex_string)
-    
-    @hexString = hex_string
-    @rgbInt = @hexString.to_i(16)
+  #test that hex_string is 6 characters long and 
+  #all characters are digits allowed in a hexadecimal number
+    if hex_string.is_a? String && /[[:xdigit:]]{6}/.match(hex_string) != nil
+      @hexString = hex_string
+      @rgbInt = @hexString.to_i(16)
+    else
+      raise ArgumentError, "The argument needs to be a 6 digit hexadecimal string"
+    end
   end
 
 end

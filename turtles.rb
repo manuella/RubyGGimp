@@ -9,22 +9,19 @@
 # classes, which are TBD.
 
 
-#          ___________
-#         | Interface |
-#         =============
-#         /          \
-#        |            |
-#      ______       ______
-#     |Mirror|     |Normal|
-#     =======      ========
-#    /      \      /      \ 
-#  ___       _    _      ___
-# |   |     | |  | |    |   |
-#  ===       =    =      ===
+#     ________  _____   _________
+#     |Mirror|-|mixin|- |Normal|
+#     =======   =====   ========
+#    /      \           /      \ 
+#  ___       _          _      ___
+# |   |     | |        | |    |   |
+#  ===       =          =      ===
 
 
 #!/ruby/bin/env ruby
 require 'dbus'
+require './UnsafeRubyWrapper.rb'
+#cyclic dependencies
 
 #***************************************************************
 #                       Normal Turtle                          *
@@ -36,39 +33,43 @@ module TurtleTraits
   
   attr_reader :world, :col, :row, :color, :col, :row, :angle, :pen_down
 
-  def forward(dist)
+  def forward(dist, angle, row, col)
     
-    d2r = (self.angle/180.0) * Math::PI
+    d2r = (angle/180.0) * Math::PI
     
-    newcol = self.col + (dist * Math.cos(d2r))
-    newrow = self.row + (dist * Math.sin(d2r))
+    newcol = col + (dist * Math.cos(d2r))
+    newrow = row + (dist * Math.sin(d2r))
     
-    color_tmp = context_get_fgcolor()
-    brush_tmp = context_get_brush()
+    color_tmp = context.get_fgcolor()
+    brush_tmp = context.get_brush()
     
     change_color = self.color != color_tmp
     change_brush = self.brush != brush_tmp
     
     if change_color
-      context_set_fgcolor(self.color)
+      $context.set_fgcolor(self.color)
     end
     
     if change_brush
-      context_set_brush(self.brush)
+      $context.set_brush(self.brush)
     end
-    image_draw_line(self.world, self.col, self.row, newcol, newrow)
-    self.col = newcol
-    self.row = newrow
+    image_draw_line(self.world, col, row, newcol, newrow)
+    col = newcol
+    row = newrow
+#****
+    puts "col: #{col}, row: #{row}"
+#****
+    return [row, col]
     
     if $context_preserve
        if change_color
-         context_set_fgcolor(color_tmp)
+         $context.set_fgcolor(color_tmp)
        end
       if change_brush
-        context_set_brush(brush_tmp)
+        $context.set_brush(brush_tmp)
       end
     end
-
+  end  
   def clone()
     turtle = self.class.new(self.world)
     turtle.world = self.world
@@ -80,24 +81,19 @@ module TurtleTraits
     turtle.angle = self.angle
     return turtle
   end
-
-  def teleport(x, y)
-    self.col = x
-    self.row = y
+  
+  def turn(degrees, current_angle)
+    return ((current_angle + degrees) % 360)
   end
   
-  def turtle_turn(degrees)
-   self.angle = (self.angle + degrees) % 360
-  end
-  
-  def turtle_face(angle)
-    self.angle = angle
+  def face(angle)
+    return (angle % 360)
   end
 
   def setPenUp()
     self.pen_down = false
   end
-
+  
   def setPenDown()
     self.pen_down = true
   end 
@@ -125,17 +121,19 @@ class Turtle
     @row = 0
     @angle = 0
     @brush = "Circle (01)"
-    @color = context_get_fgcolor()
+    @color = $context.get_fgcolor()
     @pen_down = true
   end
   
-  def forward(distance)
-    TurtleTraits.forward(distance)
+  def Turtle.forward(distance)
+    coord = TurtleTraits.forward(distance, @angle, @row, @col)
+    @row = coord[0]
+    @col = coord[1]
   end
 end
 
-class SaneTurtle >> Turtle
-end
+# class SaneTurtle >> Turtle
+# end
 
 #*********************************************
 # Mirror Turtle                              *
@@ -144,6 +142,8 @@ end
 
 class MirrorTurtle
   include TurtleTraits
+  
+  attr_reader :rowm, :colm, :anglem
 
   @world
   @brush
@@ -152,44 +152,52 @@ class MirrorTurtle
   @row
   @angle
   @pen_down
-  @reflection_line_slope
-
+  @colm
+  @rowm
+  @anglem
+  
   def initialize(image)
     @world = image
     @col = 0
     @row = 0
     @angle = 0
     @brush = "Circle (01)"
-    @color = context_get_fgcolor()
+    @color = $context.get_fgcolor()
     @pen_down = true
-    @reflection_line_slope = 0
+    @colm = 0
+    @rowm = 0
+    @anglem = 180
   end
 
-  def forward(distance)
-    line_offset = ((@reflection_line_slope - @angle).abs())
+  def MirrorTurtle.forward(distance)
 
-    if @angle > @reflection_line_slope
-      result_angle = @reflection_line_slope - line_offset
-    
-    else
-      result_angle = @reflection_line_slope - line_offset
-    end
-    
-    TurtleTraits.forward(distance)
+    coord = TurtleTraits.forward(distance, @angle, @row, @col)
+    @row = coord[0]
+    @col = coord[1]
 
-    angle_tmp = @angle
-    
-    @angle = result_angle
-    
-    TurtleTraits.forward(distance)
-    
-    @angle = angle_tmp
-  def
+    coordm = TurtleTraits.forward(distance, @anglem, @rowm, @colm)
+    @rowm = coordm[0]
+    @colm = coordm[1]    
+  end
+  
+  def MirrorTurtle.turn(degrees)
+    @angle = TurtleTraits.turn(degrees, @angle)
+    @anglem = TurtleTraits.turn((degrees * (-1)), @anglem)
+  end
+   
+  def MirrorTurtle.face(degrees)
+    @angle = TurtleTraits.face(degrees)
+    @anglem = TurtleTraits.face(360 - degrees)
+  end
+  
+  def MirrorTurtle.teleport(x, y)
+    @row, @rowm = y, y
+    @col, @colm = x, x
+  end
 end
-
 
 
 # "Shifts" the color upon movement forward, gives one color to mirrored turtle,
 # and the remaining color to the original turtle.
-class ColorShiftingTurtle << MirrorTurtle
-end
+# class ColorShiftingTurtle << MirrorTurtle
+# end

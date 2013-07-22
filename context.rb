@@ -18,17 +18,18 @@ $gimp_iface = $gimp_object["edu.grinnell.cs.glimmer.pdb"]
 # Note: the user could manually set fg/bgcolors in gimp, which would break
 # concurency of this class.
 
-# Note: This to protect the user from inputing a non-extant brush. Calling such
-# a brush will yield an internal error in gimp
+# Note: This is to protect the user from inputing a non-extant brush. Calling
+# such a brush will yield an internal error in gimp
 
-class << context
+# Note: None of this is safe
+
+class Context
+  include Singleton
 
   @bgcolor
   @fgcolor 
   @brush
- 
-  attr_reader :bgcolor, :fgcolor, :brush
-  
+   
   def update_displays()
     $gimp_iface.gimp_displays_flush()
   end
@@ -39,6 +40,7 @@ class << context
     @brush = $gimp_iface.gimp_context_get_brush()[0]
     return 0
   end
+
   def set_bgcolor(rgb)
     @bgcolor = rgb
     $gimp_iface.gimp_context_set_background(rgb)
