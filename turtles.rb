@@ -23,6 +23,12 @@ require 'dbus'
 require './UnsafeRubyWrapper.rb'
 #cyclic dependencies
 
+# Questions for Sam:
+#   a. do attr_writers make sense over teleport?
+#   b. Should we decentralize everything, and make libraries?
+
+
+
 #***************************************************************
 #                       Normal Turtle                          *
 #***************************************************************
@@ -30,36 +36,31 @@ require './UnsafeRubyWrapper.rb'
 
 #this is a mixin
 module TurtleTraits
-  
-  attr_reader :world, :col, :row, :color, :col, :row, :angle, :pen_down
+ 
 
-  def forward(dist, angle, row, col)
-    
+  def self.forward(world, dist, angle, row, col, color, brush)
+
     d2r = (angle/180.0) * Math::PI
     
     newcol = col + (dist * Math.cos(d2r))
-    newrow = row + (dist * Math.sin(d2r))
+    newrow = row + (dist * Math.sin(d2r)) 
+
+    color_tmp = color
+    brush_tmp = brush
     
-    color_tmp = context.get_fgcolor()
-    brush_tmp = context.get_brush()
-    
-    change_color = self.color != color_tmp
-    change_brush = self.brush != brush_tmp
+    change_color = (color != color_tmp)
+    change_brush = (brush != brush_tmp)
     
     if change_color
-      $context.set_fgcolor(self.color)
+      $context.set_fgcolor(color)
     end
     
     if change_brush
-      $context.set_brush(self.brush)
+      $context.set_brush(brush)
     end
-    image_draw_line(self.world, col, row, newcol, newrow)
+    image_draw_line(world, col, row, newcol, newrow)
     col = newcol
     row = newrow
-#****
-    puts "col: #{col}, row: #{row}"
-#****
-    return [row, col]
     
     if $context_preserve
        if change_color
@@ -68,36 +69,22 @@ module TurtleTraits
       if change_brush
         $context.set_brush(brush_tmp)
       end
-    end
+    end  
+    return [row, col]
   end  
   def clone()
     turtle = self.class.new(self.world)
-    turtle.world = self.world
-    turtle.brush = self.brush
-    turtle.col = self.col
-    turtle.row = self.row
-    turtle.color = self.color
-    turtle.pen_down = self.pen_down
-    turtle.angle = self.angle
-    return turtle
+    turtle.world = @world
+    turtle.brush = @brush
+    turtle.col = @col
+    turtle.row = @row
+    turtle.color = @color
+    turtle.pen_down = @pen_down
+    turtle.angle = @angle
+   return turtle
   end
-  
-  def turn(degrees, current_angle)
-    return ((current_angle + degrees) % 360)
-  end
-  
-  def face(angle)
-    return (angle % 360)
-  end
-
-  def setPenUp()
-    self.pen_down = false
-  end
-  
-  def setPenDown()
-    self.pen_down = true
-  end 
 end
+
 
 
 #*********************************************
@@ -107,13 +94,16 @@ end
 
 class Turtle
   include TurtleTraits
-  @world
-  @brush
-  @color
-  @col
-  @row
-  @angle
-  @pen_down
+
+  attr_reader :world, :col, :row, :color, :col, :row, :angle, :pen_down, :brush
+
+  @world = -1
+  @brush = 0
+  @color = 0
+  @col =  0
+  @row = 0
+  @angle = 0
+  @pen_down = true
   
   def initialize(image)
     @world = image
@@ -125,11 +115,29 @@ class Turtle
     @pen_down = true
   end
   
-  def Turtle.forward(distance)
-    coord = TurtleTraits.forward(distance, @angle, @row, @col)
+  def forward(distance)
+    coord = TurtleTraits.forward(@world, distance, @angle, @row, @col, @color, @brush)
     @row = coord[0]
     @col = coord[1]
   end
+
+  def teleport(x, y)
+    @col = x
+    @row = y
+  end
+
+  def turn(degrees)
+   @angle = ((@angle + degrees) % 360)
+  end
+  
+  def face(direction)
+    @angle = direction
+  end
+
+  protected
+  attr_writer :world, :col, :row, :color, :col, :row, :angle, :pen_down, :brush
+  
+
 end
 
 # class SaneTurtle >> Turtle
@@ -143,8 +151,7 @@ end
 class MirrorTurtle
   include TurtleTraits
   
-  attr_reader :rowm, :colm, :anglem
-
+  attr_reader :rowm, :colm, :anglem, :world, :col, :row, :color, :col, :row, :angle, :pen_down, :brush
   @world
   @brush
   @color
@@ -169,31 +176,50 @@ class MirrorTurtle
     @anglem = 180
   end
 
-  def MirrorTurtle.forward(distance)
+  def clone()
+    turtle = self.clone()
+    turtle.anglem = @anglem
+    turtle.rowm = @rowm
+    turtle.colm = @colm
+    return turtle
+  end
 
-    coord = TurtleTraits.forward(distance, @angle, @row, @col)
+  def forward(distance)
+    
+    puts @angle
+    puts @anglem
+
+    
+    coord = TurtleTraits.forward(@world, distance, @angle, @row,
+                                 @col, @color, @brush)
     @row = coord[0]
     @col = coord[1]
 
-    coordm = TurtleTraits.forward(distance, @anglem, @rowm, @colm)
+    coordm = TurtleTraits.forward(@world, distance, @anglem, @rowm,
+                                  @colm, @color, @brush)
     @rowm = coordm[0]
-    @colm = coordm[1]    
-  end
-  
-  def MirrorTurtle.turn(degrees)
-    @angle = TurtleTraits.turn(degrees, @angle)
-    @anglem = TurtleTraits.turn((degrees * (-1)), @anglem)
+    @colm = coordm[1]
+
+    
   end
    
-  def MirrorTurtle.face(degrees)
-    @angle = TurtleTraits.face(degrees)
-    @anglem = TurtleTraits.face(360 - degrees)
+  def face(degrees)
+    @angle = degrees
+    @anglem = 180 - degrees
   end
   
-  def MirrorTurtle.teleport(x, y)
+  def teleport(x, y)
     @row, @rowm = y, y
     @col, @colm = x, x
   end
+
+  def turn(degrees)
+    @angle = (degrees + @angle) % 360
+    @anglem = (180 -  @angle)
+  end
+
+  attr_writer :brush
+
 end
 
 
