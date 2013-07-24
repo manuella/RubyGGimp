@@ -12,18 +12,22 @@
 require 'dbus'
 require './turtles.rb'
 require './context.rb'
+require './imagetransform.rb'
 
 $bus = DBus::SessionBus.instance
 $gimp_service = $bus.service("edu.grinnell.cs.glimmer.GimpDBus")
 $gimp_object = $gimp_service.object("/edu/grinnell/cs/glimmer/gimp")
 $gimp_object.introspect
+#interface for pdb functions
 $gimp_iface = $gimp_object["edu.grinnell.cs.glimmer.pdb"]
+#interface for the tilestream functions
+$gimp_itile = $gimp_object["edu.grinnell.cs.glimmer.gimpplus"]
 
 # These are constants to be used with the select_ellipse and 
 # select_rectangle methods in the Image class. They should not be 
 # changed,or the methods will not work as expected. Alternately, you 
 # could memorize the numbers and use them as parameters in those 
-# methods, but we're trying to make your life easier, here. 
+# methods, but we're trying to make your life easier here. 
 
 ADD = 0
 SUBTRACT = 1
@@ -104,7 +108,14 @@ class Image
     $gimp_iface.gimp_display_new(@imageID)
   end
   
+  def transform(function)
+    image_compute(@imageID, @active_layer, function)
+  end
   
+  def set_color(r,g,b)
+    set_all_pixels(@imageID, @active_layer, r, g, b)
+  end
+
   #Selects a layer to be the active drawable
   def set_active_layer(layerID)
     layerList = $gimp_iface.gimp_image_get_layers(@imageID)[1]
@@ -615,101 +626,6 @@ class Color
 
 end
 
-#***************************************************************
-#----------             Turtle Class            ----------------
-#***************************************************************
-
-
-class Turtle
-  @world
-  @brush
-  @color
-  @col
-  @row
-  @angle
-  @pen_down
-
-  def initialize(image)
-    @world = image
-    @col = 0
-    @row = 0
-    @angle = 0
-    @brush = "Circle (01)"
-    @color = $context.get_fgcolor()
-    @pen_down = true
-  end
-
-  attr_reader :world, :color, :angle, :pen_down, :brush
-  attr_writer :color, :brush
-  
-  def teleport(x, y)
-    @col = x
-    @row = y
-  end
-
-  def face(degrees)
-    @angle = degrees % 360
-  end
-
-  def turn(degrees)
-    @angle = @angle+degrees % 360
-  end
-  
-  def setPenUp()
-    @pen_down = false
-  end
-
-  def setPenDown()
-    @pen_down = true
-  end
-
-  def clone()
-    turtle = self.new(@world)
-    turtle.world = @world
-    turtle.brush = @brush
-    turtle.col = @col
-    turtle.row = @row
-    turtle.color = @color
-    turtle.pen_down = @pen_down
-    turtle.angle = @angle
-    return turtle
-  end
-
-  def forward(dist)
-
-    d2r = (@angle/180.0) * Math::PI
-   
-    newcol = @col + (dist * Math.cos(d2r))
-    newrow = @row + (dist * Math.sin(d2r))
-    
-    color_tmp = $context.get_fgcolor()
-    brush_tmp = $context.get_brush()
-
-    change_color = @color != color_tmp
-    change_brush = @brush != brush_tmp
-
-    if change_color
-      $context.set_fgcolor(@color)
-    end
-
-    if change_brush
-      $context.set_brush(@brush)
-    end
-
-    image_draw_line(@world, @col, @row, newcol, newrow)
-    @col = newcol
-    @row = newrow
-    
-    if $context_preserve
-      if change_color
-        $context.set_fgcolor(color_tmp)
-      end
-      if change_brush
-        $context.set_brush(brush_tmp)
-      end
-    end
-  end
-end
 
 
 #***************************************************************

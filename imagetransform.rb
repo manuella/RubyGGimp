@@ -15,9 +15,24 @@
 # #if tile.export() returns 0, then the image is done being processed
 # #else, it repeats transform and export 
 
+def image_compute(imageID, active_layer, function)
+  tile = PixeledTile.new(image_to_initial_tile(imageID, active_layer))
+  while tile
+    tile.transform!(function)
+    tile = tile.update()
+  end
+end
 
-def image_to_intitial_tile(image)
-  streamID = $gimp_itile.tile_stream_new(image.imageID, image.active_layer)
+def set_all_pixels(imageID, active_layer, r, g, b)
+  tile  = PixeledTile.new(image_to_initial_tile(imageID, active_layer))
+  while tile
+    tile.set_all_pixels!(r, g, b)
+    tile = tile.update()
+  end
+end
+
+def image_to_initial_tile(imageID, active_layer)
+  streamID = $gimp_itile.tile_stream_new(imageID, active_layer)
   if tile_stream_is_valid(streamID)
     tile_array = $gimp_itile.tile_stream_get(streamID)
     $gimp_itile.tile_stream_advance(streamID)
@@ -68,6 +83,10 @@ class PixeledTile
     @pixels = arr
 
   end # init
+
+  def validate()
+    return $gimp_itile.tile_stream_is_valid(@streamID)
+  end
 
   def set_all_pixels!(r, g, b)
     i = 0
