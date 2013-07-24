@@ -11,5 +11,4 @@
 
 require './drawings.rb'
 require './turtles.rb'
-require './imagetransform.rb'
 require './colors.rb'
