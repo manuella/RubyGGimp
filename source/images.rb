@@ -66,12 +66,12 @@ class Image
   #Initializes a new instance of Image, which is completely blank
   def Image.new_blank(width, height) 
     imageID = $gimp_iface.gimp_image_new(width, height, 0)[0]
-    active_layer = $gimp_iface.gimp_layer_new(imageID, width,
+    @active_layer = $gimp_iface.gimp_layer_new(imageID, width,
                                               height, 0, "Background",
                                               100, 0)[0]
     $gimp_iface.gimp_image_insert_layer(imageID, active_layer, 0, 0)
-    $gimp_iface.gimp_drawable_fill(active_layer, 1)
-    Image.new(width, height, imageID, active_layer)
+    $gimp_iface.gimp_drawable_fill(@active_layer, 1)
+    Image.new(width, height, imageID, @active_layer)
   end
   
   # Initializes a new instance of Image which loads a previously
@@ -119,8 +119,6 @@ def set_all_pixels_internal_init(imageID, active_layer, r, g, b)
 end
 
 def image_to_initial_tile(imageID, active_layer)
-  puts imageID
-  puts active_layer
   stream_active = $gimp_itile.tile_stream_new(imageID, active_layer)[0]
   if $gimp_itile.tile_stream_is_valid(stream_active)
     tile_array = $gimp_itile.tile_stream_get(stream_active)
@@ -186,21 +184,26 @@ class PixeledTile
   end
   
   def transform!(fun)
-    @pixels.map{|element| fun.call(element)}
+    clamp_elements = Proc.new do |rgb_array|
+      [rgb_clamp(rgb_array[0]),
+       rgb_clamp(rgb_array[1]),
+       rgb_clamp(rgb_array[2])]
+    end
+    @pixels = @pixels.map{|element| clamp_elements.call(fun.call(element))}
+    
   end
   
   def export() #Sends over tile, advances to the next, and recreates the instance as 
                #a the next tile
 
     # tile_array = [@size, @pixels, @bytes_in_pic, @row_stride, @x, @y, @width, @height]
-    
+
     pixel_data = []
     $i = 0
     $j = 0
     $num_bytes = (@size * @bytes_per_pixel)
     pixel_data = @pixels.flatten()
-    
-    
+    puts pixel_data
     $gimp_itile.tile_update(@streamID, $num_bytes, pixel_data) #give gimp newest data
     state = $gimp_itile.tile_stream_advance(@streamID)           #Move to the next tile
     puts "\n\n#{state[0].class}\n#{state[0]}\n"

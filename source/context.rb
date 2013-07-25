@@ -16,6 +16,8 @@ require './gimp_dbus_connection.rb'
 
 # Note: None of this is safe
 
+
+
 class Context
   include Singleton
 
@@ -64,3 +66,4 @@ class Context
     $gimp_iface.gimp_context_set_brush(brush_name)
   end
 end
+$context = Context.instance()
