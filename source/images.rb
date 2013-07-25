@@ -24,7 +24,7 @@ class Image
   end
     
   def set_color(r, g, b)
-    set_all_pixels(@imageID, @active_layer, r, g, b)
+    set_all_pixels_internal_init(@imageID, @active_layer, r, g, b)
   end
 
   #Selects a layer to be the active drawable
@@ -110,17 +110,18 @@ def image_compute(imageID, active_layer, function)
   end
 end
 
-def set_all_pixels!(imageID, active_layer, r, g, b)
+def set_all_pixels_internal_init(imageID, active_layer, r, g, b)
   tile  = PixeledTile.new(image_to_initial_tile(imageID, active_layer))
   while tile
-    tile.set_all_pixels(r, g, b)
+    tile.set_all_pixels_internal(r, g, b)
     tile = tile.export()
   end
 end
 
 def image_to_initial_tile(imageID, active_layer)
+  puts imageID
+  puts active_layer
   stream_active = $gimp_itile.tile_stream_new(imageID, active_layer)[0]
-  puts stream_active
   if $gimp_itile.tile_stream_is_valid(stream_active)
     tile_array = $gimp_itile.tile_stream_get(stream_active)
     return [tile_array, stream_active]
@@ -176,7 +177,7 @@ class PixeledTile
     return $gimp_itile.tile_stream_is_valid(@streamID)
   end
   
-  def set_all_pixels!(r, g, b)
+  def set_all_pixels_internal(r, g, b)
     $i = 0
     while $i < @size do
       @pixels[$i] = [r, g, b]
@@ -199,17 +200,20 @@ class PixeledTile
     $num_bytes = (@size * @bytes_per_pixel)
     pixel_data = @pixels.flatten()
     
-    $gimp_itile.tile_update(@streamID, @size, pixel_data) #give gimp newest data
-    state = $gimp_itile.tile_stream_advance(@streamID)           #Move to the next tile
     
-    if state
-      array_and_id = [($gimp_itile.tile_stream_get(@streamID)), @streamID]
+    $gimp_itile.tile_update(@streamID, $num_bytes, pixel_data) #give gimp newest data
+    state = $gimp_itile.tile_stream_advance(@streamID)           #Move to the next tile
+    puts "\n\n#{state[0].class}\n#{state[0]}\n"
+    
+    if (state[0] == 1)
+      tile_array = $gimp_itile.tile_stream_get(@streamID)
+      array_and_id = [tile_array, @streamID]
       tile = PixeledTile.new(array_and_id)
       return tile
       
-    else #if there is no nex tile
+    else #if there is no next tile
       $gimp_itile.tile_stream_close(@streamID)
-      return 0 
+      return false
     end
   end
 end
