@@ -44,3 +44,10 @@ def new_layer(image)
   layer = $gimp_iface.gimp_layer_new(image, image.width, image.height, 0, name, 100, 0)
   return $gimp_iface.gimp_image_insert_layer(image, layer, 0, -1)
 end
+
+
+def bucket_fill(image, x, y)
+  $gimp_iface.gimp_bucket_fill(image.active_layer(), 
+                               0, 0, 100, 255, 0, x, y)
+end
+

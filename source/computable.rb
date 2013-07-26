@@ -31,21 +31,9 @@ $rgb_kill_all_green = Proc.new do |rgb_array|
    rgb_array[2]]
 end
 
-# $clamp_elements = Proc.new do |rgb_array|
-#   i = 0
-#   arr = []
-  
-#   while rgb_array[i]
-#     arr << rgb_clamp(rgb_array[i])
-#     i += 1
-#   end
-  
-#   arr
-# end
-
-# rgb_flatten_proc = Proc.new do |rgb_array|
-#   flatten_element = Proc.new |element| do
-#     element - (element % 16)
-#   end
-#   rgb_array.map(|element| flatten_element.call(element))
-# end
+#x and y are the coordinates of the pixel that is being transformed
+$rgb_smooth_gradient = Proc.new do |rgb_array, x, y|
+  [rgb_clamp(( x * rgb_array[0])),
+   rgb_clamp(( x * rgb_array[1])),
+   rgb_clamp(( x * rgb_array[2]))]
+end

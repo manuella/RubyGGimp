@@ -19,10 +19,14 @@ class Image
     $gimp_iface.gimp_display_new(@imageID)
   end
   
+  def transform(proc)
+    image_transform(@imageID, @active_layer, proc)
+  end
+    
   def compute(proc)
     image_compute(@imageID, @active_layer, proc)
   end
-    
+
   def set_color(r, g, b)
     set_all_pixels_internal_init(@imageID, @active_layer, r, g, b)
   end
@@ -102,10 +106,18 @@ end
 # a function (e.g: rgb-redder). This function will be applied to every pixel in 
 # the image (e.g: making the image redder). 
 
-def image_compute(imageID, active_layer, function)
+def image_transform(imageID, active_layer, function)
   tile = PixeledTile.new(image_to_initial_tile(imageID, active_layer))
   while tile
     tile.transform!(function)
+    tile = tile.export() #send tile to gimp, get new one, and set tile to it
+  end #If no tile is next (the end), then image_compute will terminate
+end
+
+def image_compute(imageID, active_layer, function)
+  tile = PixeledTile.new(image_to_initial_tile(imageID, active_layer))
+  while tile
+    tile.compute(function)
     tile = tile.export() #send tile to gimp, get new one, and set tile to it
   end #If no tile is next (the end), then image_compute will terminate
 end
@@ -136,8 +148,8 @@ class PixeledTile
   @width
   @height
   @pixels
-  @x
-  @y
+  @x_tile
+  @y_tile
   @row_stride
   @bytes_in_pic
   @size
@@ -176,16 +188,28 @@ class PixeledTile
     return $gimp_itile.tile_stream_is_valid(@streamID)
   end
   
-  def set_all_pixels_internal(r, g, b)
-    $i = 0
-    while $i < @size do
-      @pixels[$i] = [r, g, b]
-      $i += 1
-    end
-  end
-  
   def transform!(fun)
     @pixels = @pixels.map{|element| fun.call(element).map{|item| rgb_clamp(item)}}
+  end
+
+  def compute(fun)
+
+    tile_end_x = @x + @width
+    tile_end_y = @y + @width
+
+    y_on_tile = 0
+    x_on_tile = 0 
+
+    while (y_on_tile < @height)
+      y_offset = y_on_tile * @width
+      while (x_on_tile < @width)
+        pixel_index = y_offset + x_on_tile
+        @pixels[pixel_index] = fun.call(@pixels[pixel_index], (x_on_tile + @x), (y_on_tile + @y))
+        x_on_tile += 1
+      end
+      x_on_tile = 0
+      y_on_tile += 1
+    end
   end
   
   def export() #Sends over tile, advances to the next, and recreates the instance as a the next tile tile_array = [@size, @pixels, @bytes_in_pic, @row_stride, @x, @y, @width, @height]
@@ -194,11 +218,12 @@ class PixeledTile
     $i = 0
     $j = 0
     $num_bytes = (@size * @bytes_per_pixel)
-    pixel_data = @pixels.flatten()
-    puts pixel_data
-    $gimp_itile.tile_update(@streamID, pixel_data.length, pixel_data) #give gimp newest data
+    pixel_data = @pixels.flatten()  
+ 
+    $gimp_itile.tile_update(@streamID, pixel_data.length, pixel_data) #give gimp newest data   
+    #puts "\n\nstreamID:#{@streamID}\n\n"
     state = $gimp_itile.tile_stream_advance(@streamID)           #Move to the next tile
-    puts "\n\n#{@streamID}\n\n"
+   # puts "\n\n#{@streamID}\n\n"
     
     if (state[0] == 1)
       tile_array = $gimp_itile.tile_stream_get(@streamID)
