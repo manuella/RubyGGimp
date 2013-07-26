@@ -1,9 +1,8 @@
-# Functions to be used with image compute need to meet the following 
-# requirements:
+# Functions to be used with image compute and image transform need to meet the following requirements:
 ## Be a Proc object
 ## Take a 3 element array of ints (which describes an rgb color)
 ## Return a 3 element array of ints (also describes an rgb color)
-## Image#compute will clamp the ints to be between 0 and 255
+## image compute must clamp the ints to be between 0 and 255
 
 #!ruby/bin/env ruby
 

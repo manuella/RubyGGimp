@@ -50,4 +50,3 @@ def bucket_fill(image, x, y)
   $gimp_iface.gimp_bucket_fill(image.active_layer(), 
                                0, 0, 100, 255, 0, x, y)
 end
-

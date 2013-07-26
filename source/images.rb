@@ -98,13 +98,48 @@ class Image
     @active_layer = active_layer
   end
 end
-
 #Evan Manuella
 #Marsha Fletcher
 
-# Here, we are creating a system which will allow the user to input an image and
-# a function (e.g: rgb-redder). This function will be applied to every pixel in 
-# the image (e.g: making the image redder). 
+# Here, we are creating a system which will allow the user to input an image and  a function (e.g: rgb-redder) (see './computable.rb' for examples of proper input functions). This function will be applied to every pixel in the image (e.g: making the image redder). Transform works independently of pixel position, whereas compute can include x and y in its calculations. The end result for Image.compute/Image.transform will be that the original image that it was called on was changed, but with new colors according to the procedure given as a param.
+
+# #Example for Image.compute:
+#  #!ruby/bin/env ruby
+
+# require './UnsafeSimplify.rb'
+
+# ted = Image.new_blank(400, 400)
+
+# $context.set_fgcolor(124567)
+
+# bucket_fill(ted, 100, 100)
+
+# ted.compute($rgb_smooth_gradient)
+
+# ted.show()
+
+#----------------------------------------------------------
+
+## Example for Image.transform
+
+# #!ruby/bin/env ruby
+
+# require './UnsafeSimplify.rb'
+
+# ted = Image.new_blank(400, 400)
+
+# $context.set_fgcolor(124567)
+
+# bucket_fill(ted, 100, 100)
+
+# ted.transform($rgb_kill_all_green)
+
+# ted.show()
+
+#----------------------------------------------------------
+
+
+# The methods Image.transform and Image.compute call the following two functions. These functions then create a new instance of tile class. The following loop edits the first tile, then (in tile.export) sends the tile info back to gimp, and advances the tile stream to the next tile. When there are no more tiles, the stream is closed within export, and the method terminates. 
 
 def image_transform(imageID, active_layer, function)
   tile = PixeledTile.new(image_to_initial_tile(imageID, active_layer))
