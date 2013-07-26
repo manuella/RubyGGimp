@@ -12,3 +12,4 @@
 require './drawings.rb'
 require './turtles.rb'
 require './colors.rb'
+require './computable.rb'

@@ -66,12 +66,12 @@ class Image
   #Initializes a new instance of Image, which is completely blank
   def Image.new_blank(width, height) 
     imageID = $gimp_iface.gimp_image_new(width, height, 0)[0]
-    @active_layer = $gimp_iface.gimp_layer_new(imageID, width,
+    active_layer = $gimp_iface.gimp_layer_new(imageID, width,
                                               height, 0, "Background",
                                               100, 0)[0]
     $gimp_iface.gimp_image_insert_layer(imageID, active_layer, 0, 0)
-    $gimp_iface.gimp_drawable_fill(@active_layer, 1)
-    Image.new(width, height, imageID, @active_layer)
+    $gimp_iface.gimp_drawable_fill(active_layer, 1)
+    Image.new(width, height, imageID, active_layer)
   end
   
   # Initializes a new instance of Image which loads a previously
@@ -106,8 +106,8 @@ def image_compute(imageID, active_layer, function)
   tile = PixeledTile.new(image_to_initial_tile(imageID, active_layer))
   while tile
     tile.transform!(function)
-    tile = tile.export()
-  end
+    tile = tile.export() #send tile to gimp, get new one, and set tile to it
+  end #If no tile is next (the end), then image_compute will terminate
 end
 
 def set_all_pixels_internal_init(imageID, active_layer, r, g, b)
@@ -116,6 +116,7 @@ def set_all_pixels_internal_init(imageID, active_layer, r, g, b)
     tile.set_all_pixels_internal(r, g, b)
     tile = tile.export()
   end
+  $gimp_itile.tile_stream_close(@streamID)
 end
 
 def image_to_initial_tile(imageID, active_layer)
@@ -129,7 +130,7 @@ def image_to_initial_tile(imageID, active_layer)
   end
 end
 
-
+#Make this class private/protected
 class PixeledTile
   @streamID
   @width
@@ -184,19 +185,10 @@ class PixeledTile
   end
   
   def transform!(fun)
-    clamp_elements = Proc.new do |rgb_array|
-      [rgb_clamp(rgb_array[0]),
-       rgb_clamp(rgb_array[1]),
-       rgb_clamp(rgb_array[2])]
-    end
-    @pixels = @pixels.map{|element| clamp_elements.call(fun.call(element))}
-    
+    @pixels = @pixels.map{|element| fun.call(element).map{|item| rgb_clamp(item)}}
   end
   
-  def export() #Sends over tile, advances to the next, and recreates the instance as 
-               #a the next tile
-
-    # tile_array = [@size, @pixels, @bytes_in_pic, @row_stride, @x, @y, @width, @height]
+  def export() #Sends over tile, advances to the next, and recreates the instance as a the next tile tile_array = [@size, @pixels, @bytes_in_pic, @row_stride, @x, @y, @width, @height]
 
     pixel_data = []
     $i = 0
@@ -204,9 +196,9 @@ class PixeledTile
     $num_bytes = (@size * @bytes_per_pixel)
     pixel_data = @pixels.flatten()
     puts pixel_data
-    $gimp_itile.tile_update(@streamID, $num_bytes, pixel_data) #give gimp newest data
+    $gimp_itile.tile_update(@streamID, pixel_data.length, pixel_data) #give gimp newest data
     state = $gimp_itile.tile_stream_advance(@streamID)           #Move to the next tile
-    puts "\n\n#{state[0].class}\n#{state[0]}\n"
+    puts "\n\n#{@streamID}\n\n"
     
     if (state[0] == 1)
       tile_array = $gimp_itile.tile_stream_get(@streamID)
