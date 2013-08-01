@@ -13,16 +13,4 @@ Using DBus-Ruby found here:             https://github.com/mvidner/ruby-dbus
 
 Hierarchy of libraries:
 
-dbus
-|
-v
-gimpConnection
-|  |
-|  v
-images, context, gimp Tools 
-|  |  |
-|  |  v
-drawings/drawinggroup, turtles, imagetransform color/clamp
-|  |  |  |
-|  |  |  v
-simplify
+dbus -> gimpConnection -> images, context, gimp Tools -> drawings/drawinggroup, turtles, imagetransform color/clamp-> simplify
