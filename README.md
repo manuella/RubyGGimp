@@ -10,3 +10,19 @@ An unfinished wrapper library which allows easy use of ggimpDbus with Ruby.
 Using the GimpDBus server found here:   https://github.com/GlimmerLabs/gimp-dbus
                                        
 Using DBus-Ruby found here:             https://github.com/mvidner/ruby-dbus
+
+Hierarchy of libraries:
+
+dbus
+|
+v
+gimpConnection
+|  |
+|  v
+images, context, gimp Tools 
+|  |  |
+|  |  v
+drawings/drawinggroup, turtles, imagetransform color/clamp
+|  |  |  |
+|  |  |  v
+simplify
