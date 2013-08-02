@@ -19,12 +19,22 @@ class Image
     $gimp_iface.gimp_display_new(@imageID)
   end
   
+  def draw_line(x0, y0, xf, yf)
+  $gimp_iface.gimp_paintbrush(@active_layer, 0, 4, 
+                              [x0, y0, xf, yf], 0, 0)
+  end
+
   def transform(proc)
     image_transform(@imageID, @active_layer, proc)
   end
     
   def compute(proc)
     image_compute(@imageID, @active_layer, proc)
+  end
+
+  def bucket_fill(x, y)
+    $gimp_iface.gimp_bucket_fill(@active_layer, 
+                                 0, 0, 100, 255, 0, x, y)
   end
 
   def set_color(r, g, b)
@@ -39,7 +49,6 @@ class Image
     else
       raise Arguement "Invalide layer ID for this image: #{@imageID}"
     end
-    
   end
 
 
