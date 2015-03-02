@@ -3,7 +3,7 @@ RubyGGimp
 
 Ruby &amp; GGimp
 
-An unfinished wrapper library which allows easy use of ggimpDbus with Ruby.
+A wrapper library which allows easy scripting of Gimp through use of ggimpDbus with Ruby.
 
 Within the labs directory, you can find a setup guide.
 
